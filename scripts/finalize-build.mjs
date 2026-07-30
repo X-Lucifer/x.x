@@ -28,6 +28,23 @@ const publicHeadAssets = [
   'site.webmanifest',
 ]
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function rewritePublicAssetHref(content, asset, assetPrefix) {
+  const assetPattern = escapeRegExp(asset)
+  const hrefPattern = new RegExp(
+    `href=(["'])(?:/|(?:\\.{1,2}/)*)${assetPattern}\\1`,
+    'g',
+  )
+
+  return content.replace(
+    hrefPattern,
+    (_match, quote) => `href=${quote}${assetPrefix}${asset}${quote}`,
+  )
+}
+
 await Promise.all(
   indexFiles.map(async (file) => {
     const directory = dirname(file)
@@ -36,9 +53,15 @@ await Promise.all(
     const assetPrefix = depth === 0 ? './' : '../'.repeat(depth)
     const html = await readFile(file, 'utf8')
     const finalized = publicHeadAssets.reduce(
-      (content, asset) => content.replaceAll(`./${asset}`, `${assetPrefix}${asset}`),
+      (content, asset) => rewritePublicAssetHref(content, asset, assetPrefix),
       html.replaceAll('./assets/', `${assetPrefix}assets/`),
     )
+
+    for (const asset of publicHeadAssets) {
+      if (!finalized.includes(`href="${assetPrefix}${asset}"`)) {
+        throw new Error(`Failed to finalize ${asset} path in ${file}`)
+      }
+    }
 
     await writeFile(file, finalized)
   }),
