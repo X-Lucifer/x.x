@@ -25,6 +25,7 @@ import SystemRail from './components/layout/SystemRail.vue'
 <style scoped>
 .site-shell {
   position: relative;
+  isolation: isolate;
   min-height: 100svh;
   overflow: clip;
 }

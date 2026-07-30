@@ -30,17 +30,12 @@ function updateDirectionalLight() {
   const viewportDistance = Math.hypot(window.innerWidth, window.innerHeight)
   const distanceRatio = Math.min(distance / (viewportDistance * 0.72), 1)
   const proximity = 1 - distanceRatio
-  const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI)
   const shadowDistance = 6 + proximity * 8
 
-  stage.style.setProperty('--light-angle', `${angle.toFixed(2)}deg`)
   stage.style.setProperty('--light-shadow-x', `${(-unitX * shadowDistance).toFixed(2)}px`)
   stage.style.setProperty('--light-shadow-y', `${(-unitY * shadowDistance).toFixed(2)}px`)
   stage.style.setProperty('--light-shadow-far-x', `${(-unitX * shadowDistance * 1.6).toFixed(2)}px`)
   stage.style.setProperty('--light-shadow-far-y', `${(-unitY * shadowDistance * 1.6).toFixed(2)}px`)
-  stage.style.setProperty('--light-reach', `${(0.92 + distanceRatio * 0.22).toFixed(3)}`)
-  stage.style.setProperty('--light-beam-opacity', `${(0.4 + proximity * 0.22).toFixed(3)}`)
-  stage.style.setProperty('--light-shade-opacity', `${(0.58 + distanceRatio * 0.12).toFixed(3)}`)
 }
 
 function handlePointerMove(event: PointerEvent) {
@@ -119,8 +114,6 @@ onUnmounted(() => {
       </div>
 
       <div ref="lightStage" class="identity-stage">
-        <span class="stage-light-shade" aria-hidden="true" />
-        <span class="stage-light-beam" aria-hidden="true" />
         <span class="stage-corner stage-corner--tl" />
         <span class="stage-corner stage-corner--tr" />
         <span class="stage-corner stage-corner--bl" />
@@ -369,14 +362,10 @@ onUnmounted(() => {
 }
 
 .identity-stage {
-  --light-angle: -28deg;
   --light-shadow-x: -6px;
   --light-shadow-y: 4px;
   --light-shadow-far-x: -9.6px;
   --light-shadow-far-y: 6.4px;
-  --light-reach: 1;
-  --light-beam-opacity: 0.5;
-  --light-shade-opacity: 0.62;
   position: relative;
   isolation: isolate;
   display: grid;
@@ -392,86 +381,6 @@ onUnmounted(() => {
     2rem 2rem,
     2rem 2rem,
     auto;
-}
-
-.stage-light-shade {
-  position: absolute;
-  z-index: 2;
-  inset: 0;
-  background: rgb(1 4 2);
-  opacity: var(--light-shade-opacity);
-  pointer-events: none;
-  -webkit-mask-image: conic-gradient(
-    from calc(var(--light-angle) + 72deg) at 50% 50%,
-    transparent 0deg,
-    transparent 34deg,
-    rgb(0 0 0 / 32%) 38deg,
-    black 43deg,
-    black 360deg
-  );
-  mask-image: conic-gradient(
-    from calc(var(--light-angle) + 72deg) at 50% 50%,
-    transparent 0deg,
-    transparent 34deg,
-    rgb(0 0 0 / 32%) 38deg,
-    black 43deg,
-    black 360deg
-  );
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-}
-
-.stage-light-beam {
-  position: absolute;
-  z-index: 3;
-  top: 50%;
-  left: 50%;
-  width: 34rem;
-  height: 20rem;
-  background: linear-gradient(
-    90deg,
-    rgb(230 255 241 / 30%),
-    rgb(126 223 172 / 17%) 30%,
-    rgb(134 199 220 / 8%) 58%,
-    transparent 82%
-  );
-  -webkit-mask-image: conic-gradient(
-    from 60deg at 0 50%,
-    transparent 0deg,
-    black 7deg,
-    black 53deg,
-    transparent 60deg,
-    transparent 360deg
-  );
-  mask-image: conic-gradient(
-    from 60deg at 0 50%,
-    transparent 0deg,
-    black 7deg,
-    black 53deg,
-    transparent 60deg,
-    transparent 360deg
-  );
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  mix-blend-mode: screen;
-  opacity: var(--light-beam-opacity);
-  pointer-events: none;
-  transform: translateY(-50%) rotate(var(--light-angle)) scaleX(var(--light-reach));
-  transform-origin: left center;
-  transition: opacity 180ms ease;
-  will-change: transform;
-}
-
-.stage-light-beam::after {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 78%;
-  height: 1px;
-  background: linear-gradient(90deg, rgb(232 255 242 / 70%), rgb(126 223 172 / 18%), transparent);
-  box-shadow: 0 0 1.2rem rgb(126 223 172 / 42%);
-  content: '';
-  opacity: 0.62;
 }
 
 .identity-logo {
@@ -775,12 +684,6 @@ onUnmounted(() => {
   }
 }
 
-@media (pointer: coarse) {
-  .stage-light-beam {
-    opacity: 0.18;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .availability-dot,
   .operator-panel,
@@ -789,11 +692,6 @@ onUnmounted(() => {
   .signal-track-node,
   .cursor {
     animation: none;
-  }
-
-  .stage-light-beam {
-    opacity: 0.12;
-    transition: none;
   }
 
   .identity-logo {
