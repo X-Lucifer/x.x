@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>页面未找到 | X.LUCIFER</title>
+    <style>
+      :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #050a11; color: #edf4f0; }
+      body { min-height: 100vh; display: grid; place-items: center; margin: 0; }
+      main { width: min(42rem, calc(100% - 3rem)); }
+      small { color: #63f5d2; letter-spacing: .12em; }
+      h1 { margin: 1rem 0; font-size: clamp(2.5rem, 8vw, 5rem); }
+      p { color: #9aaba2; line-height: 1.7; }
+      nav { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem; }
+      a { padding: .75rem 1rem; border: 1px solid #314038; color: #edf4f0; text-decoration: none; }
+      a:first-child { background: #63f5d2; color: #07100b; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <small>404 / NO SIGNAL</small>
+      <h1>没有找到这个页面。</h1>
+      <p>当前地址不存在或已经移动，请返回首页或继续浏览开源软件作品。</p>
+      <nav aria-label="404 页面导航">
+        <a id="home-link" href="/">返回首页</a>
+        <a id="software-link" href="/software/">查看软件作品</a>
+      </nav>
+    </main>
+    <script>
+      const basePath = location.pathname === '/x.x' || location.pathname.startsWith('/x.x/')
+        ? '/x.x/'
+        : '/'
+      document.querySelector('#home-link').href = basePath
+      document.querySelector('#software-link').href = basePath + 'software/'
+    </script>
+  </body>
+</html>
