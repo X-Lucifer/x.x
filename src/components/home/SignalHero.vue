@@ -20,8 +20,8 @@ const currentYear = new Date().getFullYear()
 
       <p class="hero-kicker">FULL-STACK SOFTWARE ENGINEER · OPEN-SOURCE AUTHOR</p>
       <h1 class="hero-title">
-        让复杂技术，
-        <span class="hero-title-accent">成为可靠产品。</span>
+        <span class="hero-title-line">让复杂技术，</span>
+        <span class="hero-title-line hero-title-accent">成为可靠产品。</span>
       </h1>
       <p class="hero-description">
         我是 {{ siteConfig.name }}。围绕桌面客户端、服务端与开发工具开展全栈软件开发，使用
@@ -191,17 +191,20 @@ const currentYear = new Date().getFullYear()
 }
 
 .hero-title {
-  max-width: 10ch;
   margin: 0;
   color: var(--text-strong);
-  font-size: clamp(3.5rem, 7.4vw, 6.8rem);
+  font-size: clamp(3rem, 5vw, 5.4rem);
   font-weight: 560;
   letter-spacing: -0.07em;
-  line-height: 0.94;
+  line-height: 0.98;
+}
+
+.hero-title-line {
+  display: block;
+  white-space: nowrap;
 }
 
 .hero-title-accent {
-  display: block;
   color: var(--accent);
   filter: drop-shadow(0 0 1.7rem rgb(101 245 173 / 12%));
 }
@@ -545,10 +548,6 @@ const currentYear = new Date().getFullYear()
     padding-top: 5rem;
   }
 
-  .hero-title {
-    max-width: 12ch;
-  }
-
   .operator-panel {
     width: min(100%, 34rem);
     justify-self: center;
@@ -565,7 +564,7 @@ const currentYear = new Date().getFullYear()
   }
 
   .hero-title {
-    font-size: clamp(3rem, 15vw, 4.5rem);
+    font-size: clamp(2.5rem, 13vw, 4rem);
   }
 
   .hero-actions .button {
