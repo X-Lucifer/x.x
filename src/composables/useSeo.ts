@@ -43,6 +43,7 @@ export function personSchema(): StructuredData {
     description: siteConfig.description,
     jobTitle: '全栈软件工程师',
     url: siteUrl,
+    image: absoluteUrl('/apple-touch-icon.png'),
     email: `mailto:${siteConfig.email}`,
     sameAs: [siteConfig.github],
     knowsAbout: [
@@ -77,6 +78,8 @@ export function useSeo(config: MaybeRefOrGetter<SeoConfig>) {
     const structuredData = seo.structuredData
       ? asSchemaGraph(seo.structuredData)
       : undefined
+    const socialImage = absoluteUrl('/social-card.png')
+    const socialImageAlt = `${siteConfig.brand} 独角兽标志与软件工程作品站`
 
     return {
       title: seo.title,
@@ -98,11 +101,17 @@ export function useSeo(config: MaybeRefOrGetter<SeoConfig>) {
         { property: 'og:title', content: seo.title },
         { property: 'og:description', content: seo.description },
         { property: 'og:url', content: canonical },
-        { property: 'og:image', content: absoluteUrl('/favicon.svg') },
-        { name: 'twitter:card', content: 'summary' },
+        { property: 'og:image', content: socialImage },
+        { property: 'og:image:secure_url', content: socialImage },
+        { property: 'og:image:type', content: 'image/png' },
+        { property: 'og:image:width', content: '1200' },
+        { property: 'og:image:height', content: '630' },
+        { property: 'og:image:alt', content: socialImageAlt },
+        { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:title', content: seo.title },
         { name: 'twitter:description', content: seo.description },
-        { name: 'twitter:image', content: absoluteUrl('/favicon.svg') },
+        { name: 'twitter:image', content: socialImage },
+        { name: 'twitter:image:alt', content: socialImageAlt },
       ],
       script: structuredData
         ? [

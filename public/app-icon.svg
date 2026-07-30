@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="42%" r="58%">
+      <stop offset="0" stop-color="#214333"/>
+      <stop offset=".55" stop-color="#0d1711"/>
+      <stop offset="1" stop-color="#070a08"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="#070a08"/>
+  <rect width="1024" height="1024" fill="url(#glow)"/>
+  <image href="./favicon.svg" x="132" y="132" width="760" height="760"/>
+</svg>

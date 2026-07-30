@@ -179,7 +179,7 @@ watch(
 
 .nav-link:hover,
 .nav-link.router-link-active {
-  background: rgb(101 245 173 / 4%);
+  background: rgb(126 223 172 / 5%);
   color: var(--text-strong);
 }
 

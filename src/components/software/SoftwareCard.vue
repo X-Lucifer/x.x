@@ -9,7 +9,10 @@ const props = defineProps<{
   index: number
 }>()
 
-const cardStyle = computed(() => ({ '--project-accent': props.project.accent }))
+const cardStyle = computed(() => ({
+  '--project-accent': props.project.accent,
+  '--card-index': props.index,
+}))
 const sequence = computed(() => String(props.index + 1).padStart(2, '0'))
 </script>
 
@@ -65,6 +68,8 @@ const sequence = computed(() => String(props.index + 1).padStart(2, '0'))
     var(--surface-1);
   color: inherit;
   text-decoration: none;
+  animation: card-arrive 520ms cubic-bezier(0.2, 0.75, 0.25, 1) backwards;
+  animation-delay: calc(var(--card-index, 0) * 85ms);
   transition:
     border-color 220ms ease,
     transform 220ms ease,
@@ -100,7 +105,9 @@ const sequence = computed(() => String(props.index + 1).padStart(2, '0'))
 
 .software-card:hover {
   border-color: color-mix(in srgb, var(--project-accent) 38%, var(--line));
-  box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 24%);
+  box-shadow:
+    0 1.5rem 4rem rgb(0 0 0 / 26%),
+    0 0 3.5rem color-mix(in srgb, var(--project-accent) 9%, transparent);
   transform: translateY(-4px);
 }
 
@@ -137,6 +144,7 @@ const sequence = computed(() => String(props.index + 1).padStart(2, '0'))
   height: 0.35rem;
   border-radius: 50%;
   background: var(--project-accent);
+  animation: status-glow 3s ease-in-out infinite;
   box-shadow: 0 0 0.7rem var(--project-accent);
 }
 
@@ -180,6 +188,7 @@ const sequence = computed(() => String(props.index + 1).padStart(2, '0'))
 
 .visual-ring::after {
   inset: -1rem;
+  animation: orbit 18s linear infinite;
   border-style: dashed;
 }
 
@@ -194,6 +203,7 @@ const sequence = computed(() => String(props.index + 1).padStart(2, '0'))
   font-family: var(--font-mono);
   font-size: 2.8rem;
   font-weight: 300;
+  animation: core-glow 4.8s ease-in-out infinite;
   text-shadow: 0 0 1.5rem var(--project-accent);
 }
 
@@ -269,10 +279,45 @@ const sequence = computed(() => String(props.index + 1).padStart(2, '0'))
   border-color: transparent;
 }
 
+@keyframes card-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+}
+
+@keyframes status-glow {
+  50% {
+    opacity: 0.66;
+    box-shadow:
+      0 0 0.35rem var(--project-accent),
+      0 0 1rem var(--project-accent);
+  }
+}
+
+@keyframes orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes core-glow {
+  50% {
+    opacity: 0.88;
+    text-shadow:
+      0 0 0.8rem var(--project-accent),
+      0 0 2.2rem var(--project-accent);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .software-card,
   .visual-ring,
+  .visual-ring::after,
+  .visual-core,
+  .status-dot,
   .card-arrow {
+    animation: none;
     transition: none;
   }
 

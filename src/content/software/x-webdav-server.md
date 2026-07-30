@@ -6,7 +6,7 @@ category: 服务端
 year: 2026
 order: 6
 status: Active
-accent: #ff8f8f
+accent: #df9898
 stack: [ASP.NET Core 10, Native AOT, Vue 3, SQLite]
 featured: true
 repo: https://github.com/X-Lucifer/x.webdav.server

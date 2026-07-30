@@ -6,7 +6,7 @@ category: 图像工具
 year: 2026
 order: 1
 status: Released
-accent: #63f5d2
+accent: #79d9c1
 stack: [C# / .NET 10, Avalonia 12, C++, NCNN / Vulkan]
 featured: true
 repo: https://github.com/X-Lucifer/X.SuperResolution

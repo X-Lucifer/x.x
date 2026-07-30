@@ -6,7 +6,7 @@ category: 开发工具
 year: 2026
 order: 5
 status: Stable
-accent: #68d4e8
+accent: #7bcbd8
 stack: [Go 1.26, Gin, Zerolog, UUID]
 featured: false
 repo: https://github.com/X-Lucifer/go-xserver

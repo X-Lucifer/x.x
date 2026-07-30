@@ -6,7 +6,7 @@ category: 桌面客户端
 year: 2026
 order: 2
 status: Active
-accent: #72d6ff
+accent: #82c7dd
 stack: [Rust 2024, Tauri 2, Vue 3, CodeMirror 6]
 featured: true
 repo: https://github.com/X-Lucifer/Tauri-Obsidian-Lite

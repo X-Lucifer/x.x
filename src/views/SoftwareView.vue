@@ -112,7 +112,7 @@ useSeo({
 .page-title {
   margin: 0;
   color: var(--text-strong);
-  font-size: clamp(3.2rem, 8vw, 7rem);
+  font-size: clamp(2.9rem, 7vw, 6.1rem);
   font-weight: 560;
   letter-spacing: -0.065em;
   line-height: 0.92;
@@ -159,7 +159,7 @@ useSeo({
 }
 
 .filters .filter--active {
-  border-color: rgb(99 245 210 / 25%);
+  border-color: rgb(126 218 190 / 26%);
   color: var(--accent);
 }
 

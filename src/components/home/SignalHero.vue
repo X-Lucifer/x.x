@@ -164,8 +164,8 @@ const currentYear = new Date().getFullYear()
   gap: 0.6rem;
   margin-bottom: 2.2rem;
   padding: 0.48rem 0.65rem;
-  border: 1px solid rgb(101 245 173 / 22%);
-  background: rgb(101 245 173 / 4%);
+  border: 1px solid rgb(126 223 172 / 24%);
+  background: rgb(126 223 172 / 5%);
   color: var(--accent);
   font-family: var(--font-mono);
   font-size: 0.61rem;
@@ -193,7 +193,7 @@ const currentYear = new Date().getFullYear()
 .hero-title {
   margin: 0;
   color: var(--text-strong);
-  font-size: clamp(3rem, 5vw, 5.4rem);
+  font-size: clamp(2.8rem, 4.6vw, 4.9rem);
   font-weight: 560;
   letter-spacing: -0.07em;
   line-height: 0.98;
@@ -206,7 +206,7 @@ const currentYear = new Date().getFullYear()
 
 .hero-title-accent {
   color: var(--accent);
-  filter: drop-shadow(0 0 1.7rem rgb(101 245 173 / 12%));
+  filter: drop-shadow(0 0 1.9rem rgb(126 223 172 / 16%));
 }
 
 .hero-description {
@@ -273,11 +273,12 @@ const currentYear = new Date().getFullYear()
   overflow: hidden;
   border: 1px solid var(--line-strong);
   border-radius: 0.25rem;
-  background: linear-gradient(145deg, rgb(13 20 15 / 92%), rgb(4 8 6 / 98%));
+  animation: panel-breathe 6.5s ease-in-out infinite;
+  background: linear-gradient(145deg, rgb(17 25 20 / 94%), rgb(7 11 9 / 98%));
   box-shadow:
     1.6rem 1.6rem 0 rgb(0 0 0 / 18%),
     0 2rem 6rem rgb(0 0 0 / 42%),
-    0 0 5rem rgb(58 255 149 / 5%);
+    0 0 5rem rgb(126 223 172 / 7%);
 }
 
 .panel-topbar {
@@ -316,9 +317,9 @@ const currentYear = new Date().getFullYear()
   overflow: hidden;
   border-bottom: 1px solid var(--line-strong);
   background:
-    radial-gradient(circle, rgb(101 245 173 / 12%), transparent 48%),
-    linear-gradient(rgb(101 245 173 / 3%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(101 245 173 / 3%) 1px, transparent 1px);
+    radial-gradient(circle, rgb(126 223 172 / 13%), transparent 48%),
+    linear-gradient(rgb(126 223 172 / 3.5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(126 223 172 / 3.5%) 1px, transparent 1px);
   background-size:
     auto,
     2rem 2rem,
@@ -354,7 +355,7 @@ const currentYear = new Date().getFullYear()
   position: absolute;
   width: 13rem;
   height: 13rem;
-  border: 1px dashed rgb(101 245 173 / 16%);
+  border: 1px dashed rgb(126 223 172 / 18%);
   border-radius: 50%;
   animation: rotate 24s linear infinite;
 }
@@ -362,7 +363,7 @@ const currentYear = new Date().getFullYear()
 .stage-ring::before {
   position: absolute;
   inset: 1rem;
-  border: 1px solid rgb(101 245 173 / 10%);
+  border: 1px solid rgb(126 223 172 / 12%);
   border-radius: inherit;
   content: '';
 }
@@ -375,7 +376,7 @@ const currentYear = new Date().getFullYear()
   left: 0;
   height: 18%;
   animation: scan 4.5s linear infinite;
-  background: linear-gradient(to bottom, transparent, rgb(101 245 173 / 14%), transparent);
+  background: linear-gradient(to bottom, transparent, rgb(126 223 172 / 16%), transparent);
   pointer-events: none;
 }
 
@@ -504,7 +505,7 @@ const currentYear = new Date().getFullYear()
 .signal-track-line {
   height: 1px;
   flex: 1;
-  background: linear-gradient(90deg, var(--line), rgb(101 245 173 / 50%), var(--line));
+  background: linear-gradient(90deg, var(--line), rgb(126 223 172 / 52%), var(--line));
 }
 
 .signal-track-node {
@@ -512,7 +513,8 @@ const currentYear = new Date().getFullYear()
   height: 0.45rem;
   border: 1px solid var(--accent);
   border-radius: 50%;
-  box-shadow: 0 0 1rem rgb(101 245 173 / 45%);
+  animation: node-glow 2.8s ease-in-out infinite;
+  box-shadow: 0 0 1rem rgb(126 223 172 / 42%);
 }
 
 @keyframes pulse {
@@ -540,6 +542,25 @@ const currentYear = new Date().getFullYear()
   }
 }
 
+@keyframes panel-breathe {
+  50% {
+    border-color: rgb(148 178 158 / 32%);
+    box-shadow:
+      1.6rem 1.6rem 0 rgb(0 0 0 / 16%),
+      0 2.2rem 6.5rem rgb(0 0 0 / 45%),
+      0 0 6rem rgb(126 223 172 / 10%);
+  }
+}
+
+@keyframes node-glow {
+  50% {
+    box-shadow:
+      0 0 0.4rem rgb(126 223 172 / 60%),
+      0 0 1.5rem rgb(126 223 172 / 48%);
+    transform: scale(1.12);
+  }
+}
+
 @media (max-width: 940px) {
   .hero {
     min-height: auto;
@@ -564,7 +585,8 @@ const currentYear = new Date().getFullYear()
   }
 
   .hero-title {
-    font-size: clamp(2.5rem, 13vw, 4rem);
+    font-size: clamp(2.25rem, 10.6vw, 3.25rem);
+    letter-spacing: -0.065em;
   }
 
   .hero-actions .button {
@@ -597,8 +619,10 @@ const currentYear = new Date().getFullYear()
 
 @media (prefers-reduced-motion: reduce) {
   .availability-dot,
+  .operator-panel,
   .stage-ring,
   .stage-scan,
+  .signal-track-node,
   .cursor {
     animation: none;
   }

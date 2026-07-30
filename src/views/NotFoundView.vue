@@ -33,7 +33,7 @@ useSeo({
 .not-found h1 {
   margin: 0;
   color: var(--text-strong);
-  font-size: clamp(2.5rem, 7vw, 5rem);
+  font-size: clamp(2.3rem, 6.2vw, 4.4rem);
 }
 
 .not-found > p:not(.eyebrow) {

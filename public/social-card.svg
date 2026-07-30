@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="ambient" cx="75%" cy="30%" r="72%">
+      <stop offset="0" stop-color="#173b2a"/>
+      <stop offset=".44" stop-color="#0a120d"/>
+      <stop offset="1" stop-color="#070a08"/>
+    </radialGradient>
+    <linearGradient id="signal" x1="0" x2="1">
+      <stop stop-color="#7edfac"/>
+      <stop offset="1" stop-color="#86c7dc"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#9bb3a3" stroke-opacity=".075"/>
+    </pattern>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#ambient)"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <circle cx="960" cy="160" r="210" fill="#7edfac" fill-opacity=".07" filter="url(#softGlow)"/>
+  <path d="M72 78H1128M72 552H1128" stroke="#94b29e" stroke-opacity=".2"/>
+  <path d="M72 78V108M1128 78V108M72 522V552M1128 522V552" stroke="#7edfac" stroke-opacity=".6"/>
+
+  <image href="./favicon.svg" x="820" y="145" width="250" height="250"/>
+  <circle cx="945" cy="270" r="156" fill="none" stroke="#7edfac" stroke-opacity=".15" stroke-dasharray="5 10"/>
+  <path d="M760 270H1130" stroke="url(#signal)" stroke-opacity=".28"/>
+  <path d="M945 85V455" stroke="url(#signal)" stroke-opacity=".2"/>
+
+  <text x="92" y="137" fill="#7edfac" font-family="'Cascadia Mono','Consolas',monospace" font-size="20" font-weight="600" letter-spacing="4">
+    X.LUCIFER / SIGNAL ACTIVE
+  </text>
+  <text x="88" y="252" fill="#e8efeb" font-family="'Microsoft YaHei','Segoe UI',sans-serif" font-size="70" font-weight="700" letter-spacing="-4">
+    让复杂技术，
+  </text>
+  <text x="88" y="342" fill="#7edfac" font-family="'Microsoft YaHei','Segoe UI',sans-serif" font-size="70" font-weight="700" letter-spacing="-4">
+    成为可靠产品。
+  </text>
+  <text x="92" y="420" fill="#9eafa5" font-family="'Microsoft YaHei','Segoe UI',sans-serif" font-size="25">
+    全栈软件工程师 · 开源软件作者
+  </text>
+  <text x="92" y="488" fill="#718278" font-family="'Cascadia Mono','Consolas',monospace" font-size="17" letter-spacing="2">
+    DESKTOP / SERVER / TOOLING / OPEN SOURCE
+  </text>
+  <circle cx="1098" cy="523" r="5" fill="#7edfac"/>
+  <text x="1080" y="530" fill="#718278" font-family="'Cascadia Mono','Consolas',monospace" font-size="15" text-anchor="end">
+    xlucifer.top
+  </text>
+</svg>

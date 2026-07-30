@@ -17,6 +17,16 @@ async function findIndexFiles(directory) {
 }
 
 const indexFiles = await findIndexFiles(distDir)
+const publicHeadAssets = [
+  'favicon.svg',
+  'favicon-32x32.png',
+  'favicon-16x16.png',
+  'apple-touch-icon-120.png',
+  'apple-touch-icon-152.png',
+  'apple-touch-icon-167.png',
+  'apple-touch-icon.png',
+  'site.webmanifest',
+]
 
 await Promise.all(
   indexFiles.map(async (file) => {
@@ -25,9 +35,10 @@ await Promise.all(
     const depth = relativeDirectory ? relativeDirectory.split(sep).length : 0
     const assetPrefix = depth === 0 ? './' : '../'.repeat(depth)
     const html = await readFile(file, 'utf8')
-    const finalized = html
-      .replaceAll('./assets/', `${assetPrefix}assets/`)
-      .replaceAll('./favicon.svg', `${assetPrefix}favicon.svg`)
+    const finalized = publicHeadAssets.reduce(
+      (content, asset) => content.replaceAll(`./${asset}`, `${assetPrefix}${asset}`),
+      html.replaceAll('./assets/', `${assetPrefix}assets/`),
+    )
 
     await writeFile(file, finalized)
   }),

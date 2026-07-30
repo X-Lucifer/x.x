@@ -48,7 +48,7 @@ function parseDocument(path: string, source: string): SoftwareProject {
     year: metadata.year || new Date().getFullYear().toString(),
     order: Number(metadata.order || 999),
     status: metadata.status || 'Active',
-    accent: metadata.accent || '#63f5d2',
+    accent: metadata.accent || '#79d9c1',
     stack: parseList(metadata.stack),
     featured: metadata.featured === 'true',
     repo: metadata.repo || undefined,

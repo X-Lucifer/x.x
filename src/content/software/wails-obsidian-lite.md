@@ -6,7 +6,7 @@ category: 桌面客户端
 year: 2026
 order: 3
 status: Active
-accent: #9b8cff
+accent: #9c91dc
 stack: [Go 1.25, Wails 2, Vue 3, CodeMirror 6]
 featured: false
 repo: https://github.com/X-Lucifer/Wails-Obsidian-Lite

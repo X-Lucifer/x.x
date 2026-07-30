@@ -6,7 +6,7 @@ category: 开发工具
 year: 2026
 order: 4
 status: Stable
-accent: #f3a86b
+accent: #dfa878
 stack: [Rust 2024, Actix Web, Clap, Tracing]
 featured: true
 repo: https://github.com/X-Lucifer/rust-xserver

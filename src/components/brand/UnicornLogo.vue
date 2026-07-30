@@ -53,8 +53,8 @@ withDefaults(
 .unicorn-shell--interactive:hover .unicorn,
 .unicorn-shell--interactive:focus-within .unicorn {
   filter:
-    drop-shadow(0 0 0.75rem rgb(67 255 160 / 55%))
-    drop-shadow(0 0 2rem rgb(67 255 160 / 24%));
+    drop-shadow(0 0 0.75rem rgb(126 223 172 / 50%))
+    drop-shadow(0 0 2rem rgb(126 223 172 / 22%));
   transform: translateY(-2px) scale(1.015);
 }
 

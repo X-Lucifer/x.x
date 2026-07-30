@@ -8,7 +8,7 @@ import { getSoftwareBySlug } from '../data/software'
 
 const route = useRoute()
 const project = computed(() => getSoftwareBySlug(String(route.params.slug)))
-const projectStyle = computed(() => ({ '--project-accent': project.value?.accent ?? '#63f5d2' }))
+const projectStyle = computed(() => ({ '--project-accent': project.value?.accent ?? '#79d9c1' }))
 
 useSeo(() => {
   const currentProject = project.value
@@ -188,7 +188,7 @@ useSeo(() => {
 
 .detail-heading h1 {
   color: var(--text-strong);
-  font-size: clamp(3.5rem, 9vw, 8rem);
+  font-size: clamp(3rem, 8vw, 7rem);
   font-weight: 560;
   letter-spacing: -0.07em;
   line-height: 0.9;
@@ -238,7 +238,7 @@ useSeo(() => {
 .detail-emblem span {
   color: var(--project-accent);
   font-family: var(--font-mono);
-  font-size: 4rem;
+  font-size: 3.5rem;
   font-weight: 300;
   text-shadow: 0 0 2rem var(--project-accent);
 }
@@ -384,7 +384,7 @@ useSeo(() => {
 .not-found h1 {
   margin: 0 0 2rem;
   color: var(--text-strong);
-  font-size: clamp(2.5rem, 7vw, 5rem);
+  font-size: clamp(2.3rem, 6.2vw, 4.4rem);
 }
 
 @media (max-width: 760px) {

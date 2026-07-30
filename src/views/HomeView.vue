@@ -37,7 +37,9 @@ useSeo({
       about: { '@id': `${siteUrl}#person` },
       primaryImageOfPage: {
         '@type': 'ImageObject',
-        url: absoluteUrl('/favicon.svg'),
+        url: absoluteUrl('/social-card.png'),
+        width: 1200,
+        height: 630,
       },
     },
   ],

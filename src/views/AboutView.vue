@@ -138,7 +138,7 @@ useSeo({
 .about-hero h1 {
   margin: 0;
   color: var(--text-strong);
-  font-size: clamp(3.5rem, 8vw, 7.2rem);
+  font-size: clamp(3rem, 7vw, 6.2rem);
   font-weight: 560;
   letter-spacing: -0.07em;
   line-height: 0.94;
@@ -146,7 +146,7 @@ useSeo({
 
 .about-hero h1 span {
   color: transparent;
-  background: linear-gradient(100deg, var(--accent), #b8ffd6 52%, var(--accent-blue));
+  background: linear-gradient(100deg, var(--accent), #c6ead5 52%, var(--accent-blue));
   background-clip: text;
   -webkit-background-clip: text;
 }
@@ -187,12 +187,12 @@ useSeo({
   height: 6rem;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgb(99 245 210 / 25%);
+  border: 1px solid rgb(126 218 190 / 26%);
   border-radius: 0.2rem;
   background:
-    radial-gradient(circle, rgb(101 245 173 / 13%), transparent 70%),
+    radial-gradient(circle, rgb(126 223 172 / 14%), transparent 70%),
     var(--surface-0);
-  box-shadow: 0 0 2rem rgb(101 245 173 / 6%);
+  box-shadow: 0 0 2.4rem rgb(126 223 172 / 8%);
 }
 
 .profile-id div:last-child {
@@ -322,10 +322,10 @@ useSeo({
   margin-top: 8rem;
   overflow: hidden;
   padding: clamp(2rem, 6vw, 4rem);
-  border: 1px solid rgb(99 245 210 / 20%);
+  border: 1px solid rgb(126 218 190 / 22%);
   border-radius: 0.25rem;
   background:
-    radial-gradient(circle at 12% 100%, rgb(101 245 173 / 11%), transparent 35%),
+    radial-gradient(circle at 12% 100%, rgb(126 223 172 / 13%), transparent 35%),
     radial-gradient(circle at 90% 0, rgb(116 214 255 / 7%), transparent 40%),
     var(--surface-1);
 }
@@ -351,7 +351,7 @@ useSeo({
 .contact-banner h2 {
   margin: 0;
   color: var(--text-strong);
-  font-size: clamp(2.2rem, 5vw, 4rem);
+  font-size: clamp(2rem, 4.5vw, 3.55rem);
   letter-spacing: -0.055em;
   line-height: 1.05;
 }
