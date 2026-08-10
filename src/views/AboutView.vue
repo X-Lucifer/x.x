@@ -40,7 +40,7 @@ useSeo({
   <div class="about container">
     <header class="about-hero">
       <div>
-        <p class="eyebrow">ABOUT / OPERATOR</p>
+        <p class="eyebrow">ABOUT THE ENGINEER</p>
         <h1>工程理性，<br /><span>产品感性。</span></h1>
       </div>
       <div class="about-intro">
@@ -91,7 +91,7 @@ useSeo({
     </section>
 
     <section class="technology-panel" aria-label="技术栈">
-      <p class="eyebrow">TECHNOLOGY / MATRIX</p>
+      <p class="eyebrow">TECHNOLOGY MATRIX</p>
       <dl>
         <div v-for="group in technologyGroups" :key="group.code">
           <dt>{{ group.code }} / {{ group.label }}</dt>
@@ -102,7 +102,7 @@ useSeo({
 
     <section class="contact-banner">
       <div>
-        <p class="eyebrow">SOFTWARE / COLLABORATION</p>
+        <p class="eyebrow">SOFTWARE COLLABORATION</p>
         <h2>软件开发与技术合作，<br />从明确需求开始。</h2>
         <p class="contact-description">
           可就桌面客户端、服务端系统、工程工具、性能优化与开源项目协作进行沟通。
@@ -146,7 +146,7 @@ useSeo({
 
 .about-hero h1 span {
   color: transparent;
-  background: linear-gradient(100deg, var(--accent), #c6ead5 52%, var(--accent-blue));
+  background: linear-gradient(100deg, var(--accent), #c6ead5 58%, var(--accent));
   background-clip: text;
   -webkit-background-clip: text;
 }

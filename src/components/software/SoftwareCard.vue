@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ArrowUpRight } from '@lucide/vue'
-import { computed } from 'vue'
 import AppLink from '../AppLink.vue'
 import type { SoftwareProject } from '../../types/software'
 
@@ -9,22 +8,18 @@ const props = defineProps<{
   index: number
 }>()
 
-const cardStyle = computed(() => ({
-  '--project-accent': props.project.accent,
-  '--card-index': props.index,
-}))
-const sequence = computed(() => String(props.index + 1).padStart(2, '0'))
+const sequence = String(props.index + 1).padStart(2, '0')
 </script>
 
 <template>
   <AppLink
     class="software-card"
-    :style="cardStyle"
+    :style="{ '--card-index': index }"
     :to="`/software/${project.slug}`"
     :aria-label="`查看 ${project.title} 详情`"
   >
     <div class="card-topline">
-      <span>{{ sequence }} / {{ project.category.toUpperCase() }}</span>
+      <span>{{ project.category.toUpperCase() }}</span>
       <span class="status">
         <span class="status-dot" aria-hidden="true" />
         {{ project.status }}
@@ -32,10 +27,16 @@ const sequence = computed(() => String(props.index + 1).padStart(2, '0'))
     </div>
 
     <div class="card-visual" aria-hidden="true">
-      <div class="visual-ring" />
-      <div class="visual-core">{{ project.title.slice(0, 1) }}</div>
-      <span class="visual-axis visual-axis--x" />
-      <span class="visual-axis visual-axis--y" />
+      <span class="visual-sequence">{{ sequence }}</span>
+      <div class="visual-product">
+        <span class="visual-label">PROJECT / {{ project.year }}</span>
+        <strong>{{ project.title }}</strong>
+        <span>{{ project.stack.slice(0, 2).join(' + ') }}</span>
+      </div>
+      <div class="visual-terminal">
+        <span>&gt; inspect {{ project.slug }}</span>
+        <span>&gt; status {{ project.status.toLowerCase() }}</span>
+      </div>
     </div>
 
     <div class="card-copy">
@@ -55,20 +56,17 @@ const sequence = computed(() => String(props.index + 1).padStart(2, '0'))
 
 <style scoped>
 .software-card {
-  --project-accent: var(--accent);
   position: relative;
   display: flex;
-  min-height: 30rem;
+  min-height: 28rem;
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 0.25rem;
-  background:
-    linear-gradient(145deg, color-mix(in srgb, var(--project-accent) 6%, transparent), transparent 42%),
-    var(--surface-1);
+  background: var(--surface-1);
   color: inherit;
   text-decoration: none;
-  animation: card-arrive 520ms cubic-bezier(0.2, 0.75, 0.25, 1) backwards;
+  animation: card-arrive 440ms cubic-bezier(0.2, 0.75, 0.25, 1) backwards;
   animation-delay: calc(var(--card-index, 0) * 85ms);
   transition:
     border-color 220ms ease,
@@ -89,25 +87,11 @@ const sequence = computed(() => String(props.index + 1).padStart(2, '0'))
   transition: opacity 220ms ease;
 }
 
-.software-card::after {
-  position: absolute;
-  z-index: 3;
-  top: 0.7rem;
-  right: 0.7rem;
-  width: 0.7rem;
-  height: 0.7rem;
-  border-top: 1px solid var(--project-accent);
-  border-right: 1px solid var(--project-accent);
-  content: '';
-  opacity: 0.46;
-  pointer-events: none;
-}
-
 .software-card:hover {
-  border-color: color-mix(in srgb, var(--project-accent) 38%, var(--line));
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--line));
   box-shadow:
     0 1.5rem 4rem rgb(0 0 0 / 26%),
-    0 0 3.5rem color-mix(in srgb, var(--project-accent) 9%, transparent);
+    0 0 3.5rem rgb(120 226 168 / 7%);
   transform: translateY(-4px);
 }
 
@@ -143,84 +127,84 @@ const sequence = computed(() => String(props.index + 1).padStart(2, '0'))
   width: 0.35rem;
   height: 0.35rem;
   border-radius: 50%;
-  background: var(--project-accent);
-  animation: status-glow 3s ease-in-out infinite;
-  box-shadow: 0 0 0.7rem var(--project-accent);
+  background: var(--accent);
+  box-shadow: 0 0 0.7rem var(--accent);
 }
 
 .card-visual {
   position: relative;
   display: grid;
-  min-height: 15rem;
+  min-height: 16rem;
   flex: 1;
   place-items: center;
   overflow: hidden;
   border-bottom: 1px solid var(--line);
-  background-image:
-    linear-gradient(rgb(255 255 255 / 3%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(255 255 255 / 3%) 1px, transparent 1px);
-  background-size: 2.25rem 2.25rem;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  background:
+    linear-gradient(145deg, rgb(120 226 168 / 7%), transparent 44%),
+    linear-gradient(rgb(255 255 255 / 2.5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 2.5%) 1px, transparent 1px),
+    #090d0b;
+  background-size: auto, 2.25rem 2.25rem, 2.25rem 2.25rem, auto;
 }
 
-.visual-ring {
+.visual-sequence {
   position: absolute;
-  width: 9rem;
-  height: 9rem;
-  border: 1px solid color-mix(in srgb, var(--project-accent) 26%, transparent);
-  border-radius: 50%;
-  box-shadow:
-    0 0 3rem color-mix(in srgb, var(--project-accent) 10%, transparent),
-    inset 0 0 2rem color-mix(in srgb, var(--project-accent) 7%, transparent);
-  transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  top: 1rem;
+  right: 1.25rem;
+  color: rgb(240 244 241 / 6%);
+  font-family: var(--font-mono);
+  font-size: clamp(5rem, 11vw, 9rem);
+  font-weight: 700;
+  letter-spacing: -0.1em;
+  line-height: 1;
 }
 
-.visual-ring::before,
-.visual-ring::after {
-  position: absolute;
-  border: 1px solid color-mix(in srgb, var(--project-accent) 15%, transparent);
-  border-radius: inherit;
-  content: '';
-}
-
-.visual-ring::before {
-  inset: 0.8rem;
-}
-
-.visual-ring::after {
-  inset: -1rem;
-  animation: orbit 18s linear infinite;
-  border-style: dashed;
-}
-
-.software-card:hover .visual-ring {
-  transform: rotate(22deg) scale(1.04);
-}
-
-.visual-core {
+.visual-product {
   position: relative;
   z-index: 1;
-  color: var(--project-accent);
+  display: grid;
+  width: 100%;
+  align-self: end;
+  gap: 0.65rem;
+}
+
+.visual-product span {
+  color: var(--text-dim);
   font-family: var(--font-mono);
-  font-size: 2.8rem;
-  font-weight: 300;
-  animation: core-glow 4.8s ease-in-out infinite;
-  text-shadow: 0 0 1.5rem var(--project-accent);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
 }
 
-.visual-axis {
+.visual-product strong {
+  max-width: 11ch;
+  color: var(--text-strong);
+  font-size: clamp(2rem, 4.2vw, 4.4rem);
+  font-weight: 540;
+  letter-spacing: -0.07em;
+  line-height: 0.95;
+  transition: color 220ms ease, transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.software-card:hover .visual-product strong {
+  color: var(--accent);
+  transform: translateX(0.35rem);
+}
+
+.visual-terminal {
   position: absolute;
-  background: linear-gradient(90deg, transparent, var(--project-accent), transparent);
-  opacity: 0.16;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  display: grid;
+  gap: 0.3rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.52rem;
+  text-align: right;
 }
 
-.visual-axis--x {
-  width: 90%;
-  height: 1px;
-}
-
-.visual-axis--y {
-  width: 1px;
-  height: 90%;
+.visual-terminal span:last-child {
+  color: var(--accent);
 }
 
 .card-copy {
@@ -253,7 +237,7 @@ const sequence = computed(() => String(props.index + 1).padStart(2, '0'))
 
 .card-arrow {
   flex: 0 0 auto;
-  color: var(--project-accent);
+  color: var(--accent);
   transition: transform 180ms ease;
 }
 
@@ -286,43 +270,16 @@ const sequence = computed(() => String(props.index + 1).padStart(2, '0'))
   }
 }
 
-@keyframes status-glow {
-  50% {
-    opacity: 0.66;
-    box-shadow:
-      0 0 0.35rem var(--project-accent),
-      0 0 1rem var(--project-accent);
-  }
-}
-
-@keyframes orbit {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes core-glow {
-  50% {
-    opacity: 0.88;
-    text-shadow:
-      0 0 0.8rem var(--project-accent),
-      0 0 2.2rem var(--project-accent);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .software-card,
-  .visual-ring,
-  .visual-ring::after,
-  .visual-core,
-  .status-dot,
+  .visual-product strong,
   .card-arrow {
     animation: none;
     transition: none;
   }
 
   .software-card:hover,
-  .software-card:hover .visual-ring,
+  .software-card:hover .visual-product strong,
   .software-card:hover .card-arrow {
     transform: none;
   }

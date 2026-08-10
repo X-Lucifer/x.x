@@ -53,7 +53,7 @@ useSeo({
     <section class="featured section container">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">SELECTED / BUILDS</p>
+          <p class="eyebrow">SELECTED WORK</p>
           <h2 class="section-title">软件作品</h2>
         </div>
         <AppLink class="text-link" to="/software">
@@ -74,7 +74,7 @@ useSeo({
 
     <section class="technology section container">
       <div class="technology-intro">
-        <p class="eyebrow">ENGINEERING / STACK</p>
+        <p class="eyebrow">ENGINEERING STACK</p>
         <h2 class="section-title">覆盖软件产品<br />完整生命周期。</h2>
         <p>
           技术能力从应用开发延伸至数据库、中间件、云基础设施与可观测性。
@@ -83,8 +83,7 @@ useSeo({
       </div>
 
       <div class="technology-matrix">
-        <article v-for="(group, index) in technologyGroups" :key="group.code">
-          <span class="technology-index">{{ String(index + 1).padStart(2, '0') }}</span>
+        <article v-for="group in technologyGroups" :key="group.code">
           <div class="technology-heading">
             <small>{{ group.code }}</small>
             <h3>{{ group.label }}</h3>
@@ -98,7 +97,7 @@ useSeo({
 
     <section class="principles section container">
       <div class="principle-intro">
-        <p class="eyebrow">WORK / PHILOSOPHY</p>
+        <p class="eyebrow">WORK PHILOSOPHY</p>
         <h2 class="section-title">从技术实现，<br />到完整交付。</h2>
       </div>
       <div class="principle-list">
@@ -146,8 +145,14 @@ useSeo({
 
 .software-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: dense;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
+}
+
+.software-grid > :nth-child(1),
+.software-grid > :nth-child(4) {
+  grid-column: span 2;
 }
 
 .technology,
@@ -180,20 +185,18 @@ useSeo({
 
 .technology-matrix article {
   display: grid;
-  grid-template-columns: 3rem 10rem 1fr;
+  grid-template-columns: 10rem 1fr;
   gap: 1rem;
   align-items: start;
   padding: 1.45rem 0;
   border-bottom: 1px solid var(--line);
 }
 
-.technology-index,
 .technology-heading small,
 .technology-matrix li {
   font-family: var(--font-mono);
 }
 
-.technology-index,
 .technology-heading small {
   color: var(--accent);
   font-size: 0.62rem;
@@ -274,7 +277,7 @@ useSeo({
   }
 
   .technology-matrix article {
-    grid-template-columns: 3rem 9rem 1fr;
+    grid-template-columns: 9rem 1fr;
   }
 
   .principle-list article {
@@ -296,12 +299,17 @@ useSeo({
     grid-template-columns: 1fr;
   }
 
+  .software-grid > :nth-child(1),
+  .software-grid > :nth-child(4) {
+    grid-column: auto;
+  }
+
   .technology-matrix article {
-    grid-template-columns: 2rem 1fr;
+    grid-template-columns: 1fr;
   }
 
   .technology-matrix ul {
-    grid-column: 2;
+    grid-column: auto;
   }
 
   .principle-list article {

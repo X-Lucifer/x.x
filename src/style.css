@@ -1,13 +1,11 @@
 :root {
-  --surface-0: #070a08;
-  --surface-1: #0b100d;
-  --surface-2: #111a14;
-  --text-strong: #e8efeb;
-  --text-muted: #9eafa5;
-  --text-dim: #63766a;
-  --accent: #7edfac;
-  --accent-blue: #86c7dc;
-  --accent-violet: #aa9bdd;
+  --surface-0: #070908;
+  --surface-1: #0b0f0d;
+  --surface-2: #111713;
+  --text-strong: #f0f4f1;
+  --text-muted: #9aa79f;
+  --text-dim: #657269;
+  --accent: #78e2a8;
   --line: rgb(139 165 148 / 14%);
   --line-strong: rgb(148 178 158 / 24%);
   --font-sans: 'Space Grotesk Variable', 'Segoe UI', sans-serif;
@@ -38,9 +36,8 @@ body {
   min-height: 100svh;
   margin: 0;
   background:
-    radial-gradient(circle at 78% -10%, rgb(88 151 113 / 12%), transparent 33rem),
-    radial-gradient(circle at 8% 48%, rgb(81 124 108 / 5%), transparent 28rem),
-    linear-gradient(90deg, transparent 49.96%, rgb(126 223 172 / 2.5%) 50%, transparent 50.04%),
+    radial-gradient(circle at 78% -10%, rgb(120 226 168 / 9%), transparent 33rem),
+    radial-gradient(circle at 8% 48%, rgb(120 226 168 / 3%), transparent 28rem),
     var(--surface-0);
 }
 
@@ -107,7 +104,7 @@ button:focus-visible {
   font-family: var(--font-mono);
   font-size: 0.65rem;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
 }
 
 .section-title {
@@ -159,6 +156,10 @@ button:focus-visible {
 
 .button:hover {
   transform: translateY(-2px);
+}
+
+.button:active {
+  transform: translateY(0) scale(0.98);
 }
 
 .button:hover::before {

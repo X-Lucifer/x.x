@@ -10,9 +10,9 @@ const route = useRoute()
 const mobileOpen = shallowRef(false)
 
 const navigation = [
-  { label: '首页', code: '00', to: '/' },
-  { label: '软件', code: '01', to: '/software' },
-  { label: '关于', code: '02', to: '/about' },
+  { label: '首页', to: '/' },
+  { label: '软件', to: '/software' },
+  { label: '关于', to: '/about' },
 ]
 
 watch(
@@ -60,7 +60,6 @@ watch(
           class="nav-link"
           :to="item.to"
         >
-          <span>{{ item.code }}</span>
           {{ item.label }}
         </AppLink>
         <a
@@ -157,11 +156,6 @@ watch(
   transition:
     color 180ms ease,
     background-color 180ms ease;
-}
-
-.nav-link span {
-  color: var(--text-dim);
-  font-size: 0.55rem;
 }
 
 .nav-link::after {

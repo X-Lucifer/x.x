@@ -5,7 +5,6 @@ import AppLink from '../AppLink.vue'
 import UnicornLogo from '../brand/UnicornLogo.vue'
 import { siteConfig } from '../../data/site'
 
-const currentYear = new Date().getFullYear()
 const lightStageRef = useTemplateRef<HTMLDivElement>('lightStage')
 
 let lightFrameId = 0
@@ -61,16 +60,9 @@ onUnmounted(() => {
 <template>
   <section class="hero container">
     <div class="hero-grid" aria-hidden="true" />
-    <span class="coordinate coordinate--top" aria-hidden="true">N 31°13' / E 121°28'</span>
-    <span class="coordinate coordinate--side" aria-hidden="true">NODE::X-LUCIFER</span>
 
     <div class="hero-content">
-      <div class="availability">
-        <span class="availability-dot" aria-hidden="true" />
-        STATUS / AVAILABLE FOR SOFTWARE COLLABORATION
-      </div>
-
-      <p class="hero-kicker">FULL-STACK SOFTWARE ENGINEER · OPEN-SOURCE AUTHOR</p>
+      <p class="hero-kicker">FULL-STACK SOFTWARE ENGINEER / OPEN-SOURCE AUTHOR</p>
       <h1 class="hero-title">
         <span class="hero-title-line">让复杂技术，</span>
         <span class="hero-title-line hero-title-accent">成为可靠产品。</span>
@@ -100,10 +92,6 @@ onUnmounted(() => {
           <dt>ENGINEERING_MODE</dt>
           <dd>LOCAL FIRST</dd>
         </div>
-        <div>
-          <dt>LOCATION</dt>
-          <dd>{{ siteConfig.location }}</dd>
-        </div>
       </dl>
     </div>
 
@@ -114,19 +102,20 @@ onUnmounted(() => {
       </div>
 
       <div ref="lightStage" class="identity-stage">
-        <span class="stage-corner stage-corner--tl" />
-        <span class="stage-corner stage-corner--tr" />
-        <span class="stage-corner stage-corner--bl" />
-        <span class="stage-corner stage-corner--br" />
+        <span class="stage-frame stage-frame--tl" aria-hidden="true" />
+        <span class="stage-frame stage-frame--tr" aria-hidden="true" />
+        <span class="stage-frame stage-frame--bl" aria-hidden="true" />
+        <span class="stage-frame stage-frame--br" aria-hidden="true" />
         <span class="stage-axis stage-axis--x" aria-hidden="true" />
         <span class="stage-axis stage-axis--y" aria-hidden="true" />
-        <span class="stage-ring" aria-hidden="true" />
+        <span class="stage-orbit stage-orbit--outer" aria-hidden="true" />
+        <span class="stage-orbit stage-orbit--inner" aria-hidden="true" />
         <span class="stage-scan" aria-hidden="true" />
-        <span class="stage-index">ID / 0xFF</span>
+        <span class="stage-readout stage-readout--top">BIOMETRIC / X-01</span>
+        <span class="stage-readout stage-readout--bottom">SIGNATURE LOCKED</span>
         <div class="identity-logo">
           <UnicornLogo title="X 独角兽标志" />
         </div>
-        <span class="stage-label">UNICORN SIGNATURE</span>
       </div>
 
       <dl class="panel-data">
@@ -138,24 +127,16 @@ onUnmounted(() => {
           <dt>FOCUS</dt>
           <dd>DESKTOP / SERVER / TOOLING</dd>
         </div>
-        <div>
-          <dt>SOURCE</dt>
-          <dd>GITHUB.COM/X-LUCIFER</dd>
-        </div>
       </dl>
 
-      <div class="panel-command">
-        <span class="prompt">x-lucifer@workstation:~$</span>
-        <span>ship --reliable --open-source</span>
-        <span class="cursor" aria-hidden="true" />
+      <div class="panel-terminal" aria-label="终端状态">
+        <div class="terminal-chrome" aria-hidden="true"><span /><span /><span /></div>
+        <div class="terminal-output">
+          <span><i>$</i> identify --operator x-lucifer</span>
+          <span class="terminal-response">identity verified / access granted</span>
+          <span><i>$</i> build --reliable --open-source <b aria-hidden="true" /></span>
+        </div>
       </div>
-    </div>
-
-    <div class="signal-track" aria-hidden="true">
-      <span>PORTFOLIO / REV.001</span>
-      <span class="signal-track-line" />
-      <span class="signal-track-node" />
-      <span>{{currentYear}}</span>
     </div>
   </section>
 </template>
@@ -169,7 +150,7 @@ onUnmounted(() => {
   align-items: center;
   gap: clamp(3rem, 7vw, 7rem);
   padding-top: clamp(5rem, 9vw, 7.5rem);
-  padding-bottom: 7rem;
+  padding-bottom: 5.5rem;
 }
 
 .hero-grid {
@@ -186,52 +167,9 @@ onUnmounted(() => {
   mask-image: linear-gradient(to bottom, transparent, black 10%, black 82%, transparent);
 }
 
-.coordinate {
-  position: absolute;
-  color: #435449;
-  font-family: var(--font-mono);
-  font-size: 0.55rem;
-  letter-spacing: 0.1em;
-}
-
-.coordinate--top {
-  top: 2.1rem;
-  left: var(--container-padding);
-}
-
-.coordinate--side {
-  top: 50%;
-  right: -1.6rem;
-  transform: rotate(90deg);
-}
-
 .hero-content {
   position: relative;
   z-index: 2;
-}
-
-.availability {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 2.2rem;
-  padding: 0.48rem 0.65rem;
-  border: 1px solid rgb(126 223 172 / 24%);
-  background: rgb(126 223 172 / 5%);
-  color: var(--accent);
-  font-family: var(--font-mono);
-  font-size: 0.61rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-}
-
-.availability-dot {
-  width: 0.38rem;
-  height: 0.38rem;
-  animation: pulse 2.4s ease-in-out infinite;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0.85rem var(--accent);
 }
 
 .hero-kicker {
@@ -325,7 +263,6 @@ onUnmounted(() => {
   overflow: hidden;
   border: 1px solid var(--line-strong);
   border-radius: 0.25rem;
-  animation: panel-breathe 6.5s ease-in-out infinite;
   background: linear-gradient(145deg, rgb(17 25 20 / 94%), rgb(7 11 9 / 98%));
   box-shadow:
     1.6rem 1.6rem 0 rgb(0 0 0 / 18%),
@@ -358,6 +295,7 @@ onUnmounted(() => {
   height: 0.32rem;
   border-radius: 50%;
   background: var(--accent);
+  animation: live-pulse 2.4s ease-in-out infinite;
   box-shadow: 0 0 0.7rem var(--accent);
 }
 
@@ -369,7 +307,7 @@ onUnmounted(() => {
   position: relative;
   isolation: isolate;
   display: grid;
-  min-height: 18rem;
+  min-height: 19rem;
   place-items: center;
   overflow: hidden;
   border-bottom: 1px solid var(--line-strong);
@@ -396,7 +334,7 @@ onUnmounted(() => {
       var(--light-shadow-far-x)
       var(--light-shadow-far-y)
       2rem
-      rgb(134 199 220 / 18%)
+      rgb(120 226 168 / 16%)
     );
   transition: filter 90ms linear;
   will-change: filter;
@@ -416,92 +354,6 @@ onUnmounted(() => {
 .stage-axis--y {
   width: 1px;
   height: 86%;
-}
-
-.stage-ring {
-  position: absolute;
-  width: 13rem;
-  height: 13rem;
-  border: 1px dashed rgb(126 223 172 / 18%);
-  border-radius: 50%;
-  animation: rotate 24s linear infinite;
-}
-
-.stage-ring::before {
-  position: absolute;
-  inset: 1rem;
-  border: 1px solid rgb(126 223 172 / 12%);
-  border-radius: inherit;
-  content: '';
-}
-
-.stage-scan {
-  position: absolute;
-  z-index: 1;
-  top: -20%;
-  right: 0;
-  left: 0;
-  height: 18%;
-  animation: scan 4.5s linear infinite;
-  background: linear-gradient(to bottom, transparent, rgb(126 223 172 / 16%), transparent);
-  pointer-events: none;
-}
-
-.stage-index,
-.stage-label {
-  position: absolute;
-  z-index: 4;
-  color: var(--text-dim);
-  font-family: var(--font-mono);
-  font-size: 0.53rem;
-  letter-spacing: 0.08em;
-}
-
-.stage-index {
-  top: 0.8rem;
-  left: 0.9rem;
-}
-
-.stage-label {
-  right: 0.9rem;
-  bottom: 0.8rem;
-}
-
-.stage-corner {
-  position: absolute;
-  z-index: 4;
-  width: 0.8rem;
-  height: 0.8rem;
-  border-color: var(--accent);
-  opacity: 0.62;
-}
-
-.stage-corner--tl {
-  top: 1.8rem;
-  left: 1.8rem;
-  border-top: 1px solid;
-  border-left: 1px solid;
-}
-
-.stage-corner--tr {
-  top: 1.8rem;
-  right: 1.8rem;
-  border-top: 1px solid;
-  border-right: 1px solid;
-}
-
-.stage-corner--bl {
-  bottom: 1.8rem;
-  left: 1.8rem;
-  border-bottom: 1px solid;
-  border-left: 1px solid;
-}
-
-.stage-corner--br {
-  right: 1.8rem;
-  bottom: 1.8rem;
-  border-right: 1px solid;
-  border-bottom: 1px solid;
 }
 
 .panel-data {
@@ -533,100 +385,140 @@ onUnmounted(() => {
   color: var(--text-strong);
 }
 
-.panel-command {
-  display: flex;
-  min-height: 3rem;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0 1rem;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-size: 0.58rem;
-}
-
-.prompt {
-  color: var(--accent);
-}
-
-.cursor {
-  width: 0.38rem;
-  height: 0.75rem;
-  animation: blink 1.1s step-end infinite;
-  background: var(--accent);
-}
-
-.signal-track {
+.stage-frame {
   position: absolute;
-  right: var(--container-padding);
-  bottom: 2rem;
-  left: var(--container-padding);
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
+  z-index: 6;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-color: rgb(120 226 168 / 68%);
+  filter: drop-shadow(0 0 0.45rem rgb(120 226 168 / 32%));
+}
+
+.stage-frame--tl { top: 1.25rem; left: 1.25rem; border-top: 1px solid; border-left: 1px solid; }
+.stage-frame--tr { top: 1.25rem; right: 1.25rem; border-top: 1px solid; border-right: 1px solid; }
+.stage-frame--bl { bottom: 1.25rem; left: 1.25rem; border-bottom: 1px solid; border-left: 1px solid; }
+.stage-frame--br { right: 1.25rem; bottom: 1.25rem; border-right: 1px solid; border-bottom: 1px solid; }
+
+.stage-orbit {
+  position: absolute;
+  z-index: 2;
+  border-radius: 50%;
+}
+
+.stage-orbit--outer {
+  width: 14.5rem;
+  height: 14.5rem;
+  animation: orbit-forward 22s linear infinite;
+  border: 1px dashed rgb(120 226 168 / 27%);
+}
+
+.stage-orbit--outer::before,
+.stage-orbit--outer::after {
+  position: absolute;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 1rem var(--accent);
+  content: '';
+}
+
+.stage-orbit--outer::before { top: 1.35rem; left: 1.65rem; }
+.stage-orbit--outer::after { right: 1.35rem; bottom: 1.65rem; }
+
+.stage-orbit--inner {
+  width: 12rem;
+  height: 12rem;
+  animation: orbit-reverse 16s linear infinite;
+  border: 1px solid rgb(120 226 168 / 13%);
+  border-right-color: rgb(120 226 168 / 54%);
+  border-left-color: rgb(120 226 168 / 54%);
+}
+
+.stage-scan {
+  position: absolute;
+  z-index: 4;
+  top: -28%;
+  right: 0;
+  left: 0;
+  height: 24%;
+  animation: stage-scan 4.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  background: linear-gradient(to bottom, transparent, rgb(120 226 168 / 3%) 45%, rgb(120 226 168 / 45%) 49%, rgb(230 255 241 / 72%) 50%, rgb(120 226 168 / 12%) 52%, transparent);
+  filter: drop-shadow(0 0 0.7rem rgb(120 226 168 / 44%));
+  pointer-events: none;
+}
+
+.stage-readout {
+  position: absolute;
+  z-index: 6;
   color: var(--text-dim);
   font-family: var(--font-mono);
-  font-size: 0.52rem;
-  letter-spacing: 0.1em;
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
 }
 
-.signal-track-line {
-  height: 1px;
-  flex: 1;
-  background: linear-gradient(90deg, var(--line), rgb(126 223 172 / 52%), var(--line));
+.stage-readout--top { top: 1.5rem; left: 4.2rem; }
+.stage-readout--bottom { right: 4.2rem; bottom: 1.5rem; color: var(--accent); }
+
+.panel-terminal {
+  display: grid;
+  min-height: 5.5rem;
+  grid-template-columns: 2.8rem 1fr;
+  border-top: 1px solid var(--line-strong);
+  background: rgb(3 6 4 / 86%);
 }
 
-.signal-track-node {
-  width: 0.45rem;
-  height: 0.45rem;
-  border: 1px solid var(--accent);
+.terminal-chrome {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.22rem;
+  padding-top: 1.05rem;
+  border-right: 1px solid var(--line);
+}
+
+.terminal-chrome span {
+  width: 0.22rem;
+  height: 0.22rem;
   border-radius: 50%;
-  animation: node-glow 2.8s ease-in-out infinite;
-  box-shadow: 0 0 1rem rgb(126 223 172 / 42%);
+  background: var(--text-dim);
 }
 
-@keyframes pulse {
-  50% {
-    opacity: 0.42;
-    transform: scale(0.8);
-  }
+.terminal-chrome span:first-child { background: var(--accent); box-shadow: 0 0 0.5rem rgb(120 226 168 / 54%); }
+
+.terminal-output {
+  display: grid;
+  align-content: center;
+  gap: 0.38rem;
+  padding: 0.8rem 1rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
 }
 
-@keyframes scan {
-  to {
-    top: 110%;
-  }
+.terminal-output i { margin-right: 0.5rem; color: var(--accent); font-style: normal; }
+.terminal-response { padding-left: 1.05rem; color: var(--text-dim); }
+
+.terminal-output b {
+  display: inline-block;
+  width: 0.38rem;
+  height: 0.72rem;
+  margin-left: 0.32rem;
+  animation: terminal-cursor 1.1s step-end infinite;
+  background: var(--accent);
+  vertical-align: -0.12rem;
 }
 
-@keyframes rotate {
-  to {
-    transform: rotate(360deg);
-  }
+@keyframes stage-scan {
+  0%, 12% { top: -28%; opacity: 0; }
+  20%, 80% { opacity: 1; }
+  92%, 100% { top: 104%; opacity: 0; }
 }
 
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
-}
-
-@keyframes panel-breathe {
-  50% {
-    border-color: rgb(148 178 158 / 32%);
-    box-shadow:
-      1.6rem 1.6rem 0 rgb(0 0 0 / 16%),
-      0 2.2rem 6.5rem rgb(0 0 0 / 45%),
-      0 0 6rem rgb(126 223 172 / 10%);
-  }
-}
-
-@keyframes node-glow {
-  50% {
-    box-shadow:
-      0 0 0.4rem rgb(126 223 172 / 60%),
-      0 0 1.5rem rgb(126 223 172 / 48%);
-    transform: scale(1.12);
-  }
-}
+@keyframes orbit-forward { to { transform: rotate(360deg); } }
+@keyframes orbit-reverse { to { transform: rotate(-360deg); } }
+@keyframes terminal-cursor { 50% { opacity: 0; } }
+@keyframes live-pulse { 50% { opacity: 0.45; transform: scale(0.72); } }
 
 @media (max-width: 940px) {
   .hero {
@@ -641,9 +533,6 @@ onUnmounted(() => {
     justify-self: center;
   }
 
-  .coordinate--side {
-    display: none;
-  }
 }
 
 @media (max-width: 560px) {
@@ -675,22 +564,14 @@ onUnmounted(() => {
     border-bottom: 0;
   }
 
-  .panel-command {
-    overflow: hidden;
-  }
-
-  .signal-track {
-    bottom: 1rem;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .availability-dot,
   .operator-panel,
-  .stage-ring,
+  .panel-live i,
+  .stage-orbit,
   .stage-scan,
-  .signal-track-node,
-  .cursor {
+  .terminal-output b {
     animation: none;
   }
 

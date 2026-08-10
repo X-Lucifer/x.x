@@ -5,9 +5,9 @@ import { siteConfig } from '../../data/site'
 <template>
   <div class="system-rail">
     <div class="rail-inner container">
-      <span class="rail-id">SYS::{{ siteConfig.brand }}</span>
+      <span class="rail-id">{{ siteConfig.brand }}</span>
       <span class="rail-stack">FULL STACK / OPEN SOURCE</span>
-      <span class="rail-state"><i aria-hidden="true" /> ALL SYSTEMS NOMINAL</span>
+      <span class="rail-state"><i aria-hidden="true" /> AVAILABLE FOR COLLABORATION</span>
     </div>
   </div>
 </template>

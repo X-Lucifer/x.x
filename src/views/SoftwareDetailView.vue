@@ -66,7 +66,7 @@ useSeo(() => {
 
       <div class="detail-heading">
         <div>
-          <p class="eyebrow">{{ project.category.toUpperCase() }} / {{ project.year }}</p>
+          <p class="eyebrow">{{ project.category.toUpperCase() }} {{ project.year }}</p>
           <h1>{{ project.title }}</h1>
         </div>
         <p>{{ project.summary }}</p>
@@ -127,7 +127,7 @@ useSeo(() => {
   </article>
 
   <section v-else class="not-found container">
-    <p class="eyebrow">404 / NO SIGNAL</p>
+    <p class="eyebrow">PROJECT NOT FOUND</p>
     <h1>没有找到这个项目。</h1>
     <AppLink class="button button--primary" to="/software">返回软件列表</AppLink>
   </section>

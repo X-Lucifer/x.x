@@ -12,7 +12,7 @@ useSeo({
 
 <template>
   <section class="not-found container">
-    <p class="eyebrow">404 / NO SIGNAL</p>
+    <p class="eyebrow">PAGE NOT FOUND</p>
     <h1>没有找到这个页面。</h1>
     <p>当前地址不存在或已经移动。</p>
     <div class="actions">

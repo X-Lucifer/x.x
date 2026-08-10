@@ -68,7 +68,7 @@ onUnmounted(() => {
       rgb(126 223 172 / 5%) 42%,
       transparent 70%
     ),
-    radial-gradient(34rem circle at 82% 24%, rgb(134 199 220 / 6%), transparent 72%);
+    radial-gradient(34rem circle at 82% 24%, rgb(120 226 168 / 3%), transparent 72%);
 }
 
 .ambient-glow__beam {
@@ -81,7 +81,7 @@ onUnmounted(() => {
     90deg,
     rgb(230 255 241 / 15%),
     rgb(126 223 172 / 10%) 28%,
-    rgb(134 199 220 / 4%) 58%,
+    rgb(120 226 168 / 3%) 58%,
     transparent 84%
   );
   -webkit-mask-image: conic-gradient(
@@ -124,15 +124,15 @@ onUnmounted(() => {
 .ambient-glow::before {
   top: 14%;
   left: -12rem;
-  animation: drift-left 18s ease-in-out infinite alternate;
+  animation: drift-left 26s ease-in-out infinite alternate;
   background: radial-gradient(circle, rgb(126 223 172 / 8%), transparent 68%);
 }
 
 .ambient-glow::after {
   right: -10rem;
   bottom: 3%;
-  animation: drift-right 22s ease-in-out infinite alternate;
-  background: radial-gradient(circle, rgb(170 155 221 / 7%), transparent 68%);
+  animation: drift-right 32s ease-in-out infinite alternate;
+  background: radial-gradient(circle, rgb(120 226 168 / 4%), transparent 68%);
 }
 
 @keyframes drift-left {

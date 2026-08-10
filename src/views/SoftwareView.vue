@@ -60,7 +60,7 @@ useSeo({
   <div class="page container">
     <header class="page-header">
       <div>
-        <p class="eyebrow">OPEN SOURCE / ARCHIVE</p>
+        <p class="eyebrow">OPEN SOURCE ARCHIVE</p>
         <h1 class="page-title">软件作品</h1>
       </div>
       <p class="page-description">
