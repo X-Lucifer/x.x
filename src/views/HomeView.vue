@@ -83,7 +83,7 @@ useSeo({
       </div>
 
       <div class="technology-matrix">
-        <article v-for="group in technologyGroups" :key="group.code">
+        <article v-for="group in technologyGroups" :key="group.code" data-spatial="subtle">
           <div class="technology-heading">
             <small>{{ group.code }}</small>
             <h3>{{ group.label }}</h3>
@@ -101,17 +101,17 @@ useSeo({
         <h2 class="section-title">从技术实现，<br />到完整交付。</h2>
       </div>
       <div class="principle-list">
-        <article>
+        <article data-spatial="subtle">
           <span>ENGINEERING</span>
           <h3>边界清晰</h3>
           <p>让界面、原生能力、服务协议与数据职责各自明确，降低系统长期维护成本。</p>
         </article>
-        <article>
+        <article data-spatial="subtle">
           <span>EXPERIENCE</span>
           <h3>面向真实使用</h3>
           <p>从离线可用、批量处理到安装升级，把运行环境和用户操作纳入产品设计。</p>
         </article>
-        <article>
+        <article data-spatial="subtle">
           <span>OPEN SOURCE</span>
           <h3>可验证的开放</h3>
           <p>以公开源码、清晰文档和可复现构建说明，让实现过程能够被理解与复用。</p>

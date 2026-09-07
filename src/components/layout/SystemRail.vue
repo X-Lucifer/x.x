@@ -15,7 +15,7 @@ import { siteConfig } from '../../data/site'
 <style scoped>
 .system-rail {
   border-bottom: 1px solid var(--line);
-  background: #030504;
+  background: var(--rail-bg);
 }
 
 .rail-inner {
@@ -30,7 +30,7 @@ import { siteConfig } from '../../data/site'
 }
 
 .rail-stack {
-  color: #6f8277;
+  color: var(--text-dim);
 }
 
 .rail-state {

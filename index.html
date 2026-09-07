@@ -6,8 +6,19 @@
     <title>X.LUCIFER — 全栈软件工程师与开源软件作者</title>
 
     <meta name="application-name" content="X.LUCIFER" />
-    <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#070a08" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#040906" />
+    <script>
+      (() => {
+        let theme;
+        try { theme = localStorage.getItem('x-theme'); } catch {}
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = 'dark';
+        }
+        document.documentElement.dataset.theme = theme;
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', theme === 'light' ? '#f4f5f0' : '#040906');
+      })();
+    </script>
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="X.LUCIFER" />

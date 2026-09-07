@@ -9,15 +9,18 @@ const props = defineProps<{
 }>()
 
 const sequence = String(props.index + 1).padStart(2, '0')
+
 </script>
 
 <template>
   <AppLink
     class="software-card"
+    data-spatial
     :style="{ '--card-index': index }"
     :to="`/software/${project.slug}`"
     :aria-label="`查看 ${project.title} 详情`"
   >
+    <span class="card-light" aria-hidden="true"><span data-spatial-light /></span>
     <div class="card-topline">
       <span>{{ project.category.toUpperCase() }}</span>
       <span class="status">
@@ -27,6 +30,7 @@ const sequence = String(props.index + 1).padStart(2, '0')
     </div>
 
     <div class="card-visual" aria-hidden="true">
+      <div class="project-cube"><span v-for="face in 6" :key="face" /></div>
       <span class="visual-sequence">{{ sequence }}</span>
       <div class="visual-product">
         <span class="visual-label">PROJECT / {{ project.year }}</span>
@@ -60,10 +64,11 @@ const sequence = String(props.index + 1).padStart(2, '0')
   display: flex;
   min-height: 28rem;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--line);
-  border-radius: 0.25rem;
-  background: var(--surface-1);
+  border-radius: 0.15rem;
+  background: var(--card-bg);
+  transform-style: preserve-3d;
   color: inherit;
   text-decoration: none;
   animation: card-arrive 440ms cubic-bezier(0.2, 0.75, 0.25, 1) backwards;
@@ -74,28 +79,43 @@ const sequence = String(props.index + 1).padStart(2, '0')
     box-shadow 220ms ease;
 }
 
-.software-card::before {
+.card-light {
   position: absolute;
   inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  border-radius: inherit;
   opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+
+.card-light > span {
+  position: absolute;
+  width: 56rem;
+  height: 56rem;
+  top: -28rem;
+  left: -28rem;
   background: radial-gradient(
-    28rem circle at 50% 28%,
-    color-mix(in srgb, var(--project-accent) 12%, transparent),
+    28rem circle at center,
+    rgb(var(--accent-rgb) / 9%),
     transparent 65%
   );
-  content: '';
-  transition: opacity 220ms ease;
+  transform: translate3d(14rem, 8rem, 0);
+}
+
+.software-card[data-spatial-active] .card-light > span {
+  will-change: transform;
 }
 
 .software-card:hover {
   border-color: color-mix(in srgb, var(--accent) 38%, var(--line));
   box-shadow:
-    0 1.5rem 4rem rgb(0 0 0 / 26%),
-    0 0 3.5rem rgb(120 226 168 / 7%);
-  transform: translateY(-4px);
+    0 1.5rem 4rem rgb(var(--shadow-rgb) / var(--shadow-alpha)),
+    0 0 3.5rem rgb(var(--accent-rgb) / 7%);
 }
 
-.software-card:hover::before {
+.software-card:hover .card-light {
   opacity: 1;
 }
 
@@ -137,22 +157,41 @@ const sequence = String(props.index + 1).padStart(2, '0')
   min-height: 16rem;
   flex: 1;
   place-items: center;
-  overflow: hidden;
+  overflow: clip;
   border-bottom: 1px solid var(--line);
   padding: clamp(1.5rem, 4vw, 3rem);
   background:
-    linear-gradient(145deg, rgb(120 226 168 / 7%), transparent 44%),
-    linear-gradient(rgb(255 255 255 / 2.5%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(255 255 255 / 2.5%) 1px, transparent 1px),
-    #090d0b;
+    linear-gradient(145deg, rgb(var(--accent-rgb) / 7%), transparent 44%),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+    var(--card-visual-bg);
   background-size: auto, 2.25rem 2.25rem, 2.25rem 2.25rem, auto;
 }
 
+.project-cube {
+  position: absolute;
+  top: 2rem;
+  right: 2.6rem;
+  width: 4.2rem;
+  height: 4.2rem;
+  transform-style: preserve-3d;
+  transform: perspective(600px) rotateX(-24deg) rotateY(35deg);
+  transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.project-cube span { position: absolute; inset: 0; border: 1px solid rgb(var(--accent-rgb) / 36%); background: linear-gradient(135deg, rgb(var(--accent-rgb) / 6%), transparent); }
+.project-cube span:nth-child(1) { transform: translateZ(2.1rem); }
+.project-cube span:nth-child(2) { transform: rotateY(180deg) translateZ(2.1rem); }
+.project-cube span:nth-child(3) { transform: rotateY(90deg) translateZ(2.1rem); }
+.project-cube span:nth-child(4) { transform: rotateY(-90deg) translateZ(2.1rem); }
+.project-cube span:nth-child(5) { transform: rotateX(90deg) translateZ(2.1rem); }
+.project-cube span:nth-child(6) { transform: rotateX(-90deg) translateZ(2.1rem); }
+.software-card:hover .project-cube { transform: perspective(600px) rotateX(-38deg) rotateY(125deg) translateZ(8px); }
+
 .visual-sequence {
   position: absolute;
-  top: 1rem;
-  right: 1.25rem;
-  color: rgb(240 244 241 / 6%);
+  top: 0.5rem;
+  left: 1.25rem;
+  color: rgb(var(--ink-rgb) / 6%);
   font-family: var(--font-mono);
   font-size: clamp(5rem, 11vw, 9rem);
   font-weight: 700;
@@ -277,6 +316,8 @@ const sequence = String(props.index + 1).padStart(2, '0')
     animation: none;
     transition: none;
   }
+
+  .software-card:hover .project-cube { transform: perspective(600px) rotateX(-24deg) rotateY(35deg); }
 
   .software-card:hover,
   .software-card:hover .visual-product strong,

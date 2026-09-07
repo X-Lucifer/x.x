@@ -75,6 +75,8 @@ useSeo({
           v-for="category in categories"
           :key="category"
           type="button"
+          data-spatial
+          :aria-pressed="activeCategory === category"
           :class="{ 'filter--active': activeCategory === category }"
           @click="activeCategory = category"
         >
@@ -159,7 +161,7 @@ useSeo({
 }
 
 .filters .filter--active {
-  border-color: rgb(126 218 190 / 26%);
+  border-color: rgb(var(--accent-rgb) / 26%);
   color: var(--accent);
 }
 

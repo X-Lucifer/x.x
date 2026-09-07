@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import AmbientGlow from './components/layout/AmbientGlow.vue'
+import SpatialBackdrop from './components/layout/SpatialBackdrop.vue'
+import { useSpatialInteraction } from './composables/useSpatialInteraction'
 import SiteFooter from './components/layout/SiteFooter.vue'
 import SiteHeader from './components/layout/SiteHeader.vue'
 import SystemRail from './components/layout/SystemRail.vue'
+
+useSpatialInteraction()
 </script>
 
 <template>
   <div class="site-shell">
     <a class="skip-link" href="#main-content">跳到主要内容</a>
-    <AmbientGlow />
+    <SpatialBackdrop />
     <SystemRail />
     <SiteHeader />
     <main id="main-content" class="site-main">

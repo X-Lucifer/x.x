@@ -54,7 +54,7 @@ useSeo({
       </div>
     </header>
 
-    <section class="profile-panel">
+    <section class="profile-panel" data-spatial="subtle">
       <div class="profile-id">
         <div class="profile-monogram">
           <UnicornLogo title="X 独角兽标志" />
@@ -82,7 +82,7 @@ useSeo({
         <h2 class="section-title">我如何构建</h2>
       </div>
       <div class="capability-list">
-        <article v-for="[index, title, description] in capabilities" :key="index">
+        <article v-for="[index, title, description] in capabilities" :key="index" data-spatial="subtle">
           <span>{{ index }}</span>
           <h3>{{ title }}</h3>
           <p>{{ description }}</p>
@@ -93,14 +93,14 @@ useSeo({
     <section class="technology-panel" aria-label="技术栈">
       <p class="eyebrow">TECHNOLOGY MATRIX</p>
       <dl>
-        <div v-for="group in technologyGroups" :key="group.code">
+        <div v-for="group in technologyGroups" :key="group.code" data-spatial="subtle">
           <dt>{{ group.code }} / {{ group.label }}</dt>
           <dd>{{ group.items.join(' · ') }}</dd>
         </div>
       </dl>
     </section>
 
-    <section class="contact-banner">
+    <section class="contact-banner" data-spatial="subtle">
       <div>
         <p class="eyebrow">SOFTWARE COLLABORATION</p>
         <h2>软件开发与技术合作，<br />从明确需求开始。</h2>
@@ -109,11 +109,11 @@ useSeo({
         </p>
       </div>
       <div class="contact-actions">
-        <a class="button button--primary" :href="`mailto:${siteConfig.email}`">
+        <a class="button button--primary" data-spatial :href="`mailto:${siteConfig.email}`">
           <Mail :size="18" />
           发送合作邮件
         </a>
-        <a class="button button--ghost" :href="siteConfig.github" target="_blank" rel="noreferrer">
+        <a class="button button--ghost" data-spatial :href="siteConfig.github" target="_blank" rel="noreferrer">
           <Code2 :size="18" />
           查看 GitHub
         </a>
@@ -146,7 +146,7 @@ useSeo({
 
 .about-hero h1 span {
   color: transparent;
-  background: linear-gradient(100deg, var(--accent), #c6ead5 58%, var(--accent));
+  background: linear-gradient(100deg, var(--accent), var(--accent-highlight) 58%, var(--accent));
   background-clip: text;
   -webkit-background-clip: text;
 }
@@ -180,19 +180,17 @@ useSeo({
 }
 
 .profile-monogram {
-  --unicorn-fill: #edf4f0;
-  --unicorn-hover-fill: #152019;
   display: grid;
   width: 6rem;
   height: 6rem;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgb(126 218 190 / 26%);
+  border: 1px solid rgb(var(--accent-rgb) / 26%);
   border-radius: 0.2rem;
   background:
-    radial-gradient(circle, rgb(126 223 172 / 14%), transparent 70%),
+    radial-gradient(circle, rgb(var(--accent-rgb) / 14%), transparent 70%),
     var(--surface-0);
-  box-shadow: 0 0 2.4rem rgb(126 223 172 / 8%);
+  box-shadow: 0 0 2.4rem rgb(var(--accent-rgb) / 8%);
 }
 
 .profile-id div:last-child {
@@ -322,11 +320,11 @@ useSeo({
   margin-top: 8rem;
   overflow: hidden;
   padding: clamp(2rem, 6vw, 4rem);
-  border: 1px solid rgb(126 218 190 / 22%);
+  border: 1px solid rgb(var(--accent-rgb) / 22%);
   border-radius: 0.25rem;
   background:
-    radial-gradient(circle at 12% 100%, rgb(126 223 172 / 13%), transparent 35%),
-    radial-gradient(circle at 90% 0, rgb(116 214 255 / 7%), transparent 40%),
+    radial-gradient(circle at 12% 100%, rgb(var(--accent-rgb) / 13%), transparent 35%),
+    radial-gradient(circle at 90% 0, rgb(var(--accent-rgb) / 4%), transparent 40%),
     var(--surface-1);
 }
 
@@ -335,8 +333,8 @@ useSeo({
   inset: 0;
   opacity: 0.18;
   background-image:
-    linear-gradient(rgb(255 255 255 / 5%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(255 255 255 / 5%) 1px, transparent 1px);
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 2.5rem 2.5rem;
   content: '';
   mask-image: linear-gradient(90deg, black, transparent 70%);

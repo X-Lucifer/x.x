@@ -1,18 +1,42 @@
 :root {
-  --surface-0: #070908;
+  --surface-0: #040906;
   --surface-1: #0b0f0d;
   --surface-2: #111713;
   --text-strong: #f0f4f1;
   --text-muted: #9aa79f;
-  --text-dim: #657269;
+  --text-dim: #829087;
   --accent: #78e2a8;
+  --accent-rgb: 120 226 168;
+  --ink-rgb: 240 244 241;
+  --surface-rgb: 4 9 6;
+  --text-soft: #c8ddd0;
+  --accent-highlight: #c6ead5;
   --line: rgb(139 165 148 / 14%);
   --line-strong: rgb(148 178 158 / 24%);
+  --header-bg: rgb(5 8 6 / 96%);
+  --rail-bg: #030504;
+  --menu-bg: #090e0b;
+  --card-bg: rgb(7 17 11 / 97%);
+  --card-visual-bg: rgb(6 15 9 / 95%);
+  --ghost-bg: rgb(15 24 19 / 85%);
+  --code-bg: #080f0b;
+  --grid-line: rgb(240 244 241 / 2.5%);
+  --panel-bg: #07100a;
+  --panel-back: #060e09;
+  --scene-center: #0e2316;
+  --scene-mid: #07150c;
+  --scene-edge: #050c08;
+  --shadow-rgb: 0 0 0;
+  --shadow-alpha: 26%;
+  --panel-shadow-alpha: 80%;
+  --unicorn-fill: #edf4f0;
+  --unicorn-hover-fill: #152019;
   --font-sans: 'Space Grotesk Variable', 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono Variable', Consolas, monospace;
   --container: 76rem;
   --container-padding: clamp(1.15rem, 4vw, 2.5rem);
 
+  color-scheme: dark;
   color: var(--text-muted);
   background: var(--surface-0);
   font-family: var(--font-sans);
@@ -22,22 +46,57 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+:root[data-theme='light'] {
+  --surface-0: #f4f5f0;
+  --surface-1: #fafbf7;
+  --surface-2: #e9eee6;
+  --text-strong: #1c2c25;
+  --text-muted: #48574e;
+  --text-dim: #5e6c62;
+  --text-soft: #40584b;
+  --accent: #24694f;
+  --accent-rgb: 36 105 79;
+  --ink-rgb: 28 44 37;
+  --surface-rgb: 244 245 240;
+  --accent-highlight: #3c7b61;
+  --line: rgb(55 83 66 / 14%);
+  --line-strong: rgb(55 83 66 / 25%);
+  --header-bg: rgb(244 245 240 / 97%);
+  --rail-bg: #e9eee6;
+  --menu-bg: #fafbf7;
+  --card-bg: #fafbf7;
+  --card-visual-bg: #edf1e9;
+  --ghost-bg: rgb(250 251 247 / 85%);
+  --code-bg: #e9eee6;
+  --grid-line: rgb(36 105 79 / 5%);
+  --panel-bg: #f9faf6;
+  --panel-back: #e7ece3;
+  --scene-center: #f9fbf4;
+  --scene-mid: #f0f4eb;
+  --scene-edge: #e5ece1;
+  --shadow-rgb: 38 61 46;
+  --shadow-alpha: 10%;
+  --panel-shadow-alpha: 16%;
+  --unicorn-fill: #243e30;
+  --unicorn-hover-fill: #24694f;
+  color-scheme: light;
+}
+
 * {
   box-sizing: border-box;
 }
 
 html {
-  color-scheme: dark;
   scroll-behavior: smooth;
 }
 
 body {
-  min-width: 320px;
+  min-width: 280px;
   min-height: 100svh;
   margin: 0;
   background:
-    radial-gradient(circle at 78% -10%, rgb(120 226 168 / 9%), transparent 33rem),
-    radial-gradient(circle at 8% 48%, rgb(120 226 168 / 3%), transparent 28rem),
+    radial-gradient(circle at 78% -10%, rgb(var(--accent-rgb) / 9%), transparent 33rem),
+    radial-gradient(circle at 8% 48%, rgb(var(--accent-rgb) / 3%), transparent 28rem),
     var(--surface-0);
 }
 
@@ -72,7 +131,7 @@ button:focus-visible {
 }
 
 ::selection {
-  background: rgb(126 223 172 / 24%);
+  background: rgb(var(--accent-rgb) / 24%);
   color: var(--text-strong);
 }
 
@@ -140,6 +199,22 @@ button:focus-visible {
     transform 180ms ease;
 }
 
+[data-spatial] {
+  transform: perspective(1000px) translateZ(0) rotateX(0deg) rotateY(0deg);
+  transition: transform 550ms cubic-bezier(0.16, 1, 0.3, 1), border-color 220ms ease, box-shadow 220ms ease;
+}
+[data-spatial-active] { will-change: transform; }
+:root [data-spatial][data-spatial-active] {
+  transition: border-color 220ms ease, box-shadow 220ms ease;
+}
+.software-grid { perspective: 1400px; }
+.software-card .card-copy { transform: translateZ(24px); }
+.software-card .card-topline, .software-card .card-stack { transform: translateZ(12px); }
+.technology-matrix [data-spatial-active], .principle-list [data-spatial-active], .capability-list [data-spatial-active] {
+  background: linear-gradient(90deg, rgb(var(--accent-rgb) / 5%), transparent);
+  border-bottom-color: rgb(var(--accent-rgb) / 40%);
+}
+
 .button::before {
   position: absolute;
   z-index: -1;
@@ -150,50 +225,51 @@ button:focus-visible {
   background: linear-gradient(90deg, transparent, rgb(255 255 255 / 20%), transparent);
   content: '';
   pointer-events: none;
-  transform: skewX(-18deg);
-  transition: left 520ms cubic-bezier(0.2, 0.75, 0.25, 1);
+  transform: translateX(0) skewX(-18deg);
+  transition: transform 520ms cubic-bezier(0.2, 0.75, 0.25, 1);
 }
 
 .button:hover {
-  transform: translateY(-2px);
+  translate: 0 -2px;
 }
 
 .button:active {
-  transform: translateY(0) scale(0.98);
+  translate: 0 0;
+  scale: 0.98;
 }
 
 .button:hover::before {
-  left: 118%;
+  transform: translateX(480%) skewX(-18deg);
 }
 
 .button--primary {
   background: var(--text-strong);
   color: var(--surface-0);
   box-shadow:
-    0 0.8rem 2.2rem rgb(0 0 0 / 22%),
-    0 0 2.8rem rgb(126 223 172 / 10%);
+    0 0.8rem 2.2rem rgb(var(--shadow-rgb) / var(--shadow-alpha)),
+    0 0 2.8rem rgb(var(--accent-rgb) / 10%);
 }
 
 .button--primary:hover {
   background: var(--accent);
   box-shadow:
-    0 1rem 2.6rem rgb(0 0 0 / 26%),
-    0 0 3.2rem rgb(126 223 172 / 22%);
+    0 1rem 2.6rem rgb(var(--shadow-rgb) / var(--shadow-alpha)),
+    0 0 3.2rem rgb(var(--accent-rgb) / 22%);
 }
 
 .button--ghost {
   border-color: var(--line);
-  background: rgb(15 24 19 / 68%);
+  background: var(--ghost-bg);
   color: var(--text-strong);
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 2.5%);
 }
 
 .button--ghost:hover {
-  border-color: rgb(126 223 172 / 32%);
-  background: rgb(126 223 172 / 7%);
+  border-color: rgb(var(--accent-rgb) / 32%);
+  background: rgb(var(--accent-rgb) / 7%);
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 4%),
-    0 0 2rem rgb(126 223 172 / 8%);
+    0 0 2rem rgb(var(--accent-rgb) / 8%);
 }
 
 .skip-link {
@@ -260,4 +336,7 @@ button:focus-visible {
   .section {
     animation: none;
   }
+
+  [data-spatial], .software-card .card-copy, .software-card .card-topline, .software-card .card-stack { transform: none; }
+  .button:hover, .button:active { translate: none; scale: none; }
 }

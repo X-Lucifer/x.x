@@ -8,7 +8,6 @@ import { getSoftwareBySlug } from '../data/software'
 
 const route = useRoute()
 const project = computed(() => getSoftwareBySlug(String(route.params.slug)))
-const projectStyle = computed(() => ({ '--project-accent': project.value?.accent ?? '#79d9c1' }))
 
 useSeo(() => {
   const currentProject = project.value
@@ -57,7 +56,7 @@ useSeo(() => {
 </script>
 
 <template>
-  <article v-if="project" class="detail" :style="projectStyle">
+  <article v-if="project" class="detail">
     <header class="detail-hero container">
       <AppLink class="back-link" to="/software">
         <ArrowLeft :size="16" />
@@ -76,6 +75,7 @@ useSeo(() => {
         <a
           v-if="project.repo"
           class="button button--primary"
+          data-spatial
           :href="project.repo"
           target="_blank"
           rel="noreferrer"
@@ -86,6 +86,7 @@ useSeo(() => {
         <a
           v-if="project.demo"
           class="button button--ghost"
+          data-spatial
           :href="project.demo"
           target="_blank"
           rel="noreferrer"
@@ -95,7 +96,7 @@ useSeo(() => {
         </a>
       </div>
 
-      <div class="detail-panel">
+      <div class="detail-panel" data-spatial="subtle">
         <div class="detail-emblem" aria-hidden="true">
           <span>{{ project.title.slice(0, 1) }}</span>
         </div>
@@ -154,7 +155,7 @@ useSeo(() => {
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    color-mix(in srgb, var(--project-accent) 10%, transparent),
+    color-mix(in srgb, var(--accent) 10%, transparent),
     transparent 67%
   );
   content: '';
@@ -170,7 +171,7 @@ useSeo(() => {
 }
 
 .back-link:hover {
-  color: var(--project-accent);
+  color: var(--accent);
 }
 
 .detail-heading {
@@ -225,22 +226,22 @@ useSeo(() => {
   background:
     radial-gradient(
       circle,
-      color-mix(in srgb, var(--project-accent) 14%, transparent),
+      color-mix(in srgb, var(--accent) 14%, transparent),
       transparent 62%
     ),
     repeating-radial-gradient(
       circle,
       transparent 0 1.3rem,
-      color-mix(in srgb, var(--project-accent) 7%, transparent) 1.35rem
+      color-mix(in srgb, var(--accent) 7%, transparent) 1.35rem
     );
 }
 
 .detail-emblem span {
-  color: var(--project-accent);
+  color: var(--accent);
   font-family: var(--font-mono);
   font-size: 3.5rem;
   font-weight: 300;
-  text-shadow: 0 0 2rem var(--project-accent);
+  text-shadow: 0 0 2rem rgb(var(--accent-rgb) / 18%);
 }
 
 .detail-panel dl {
@@ -296,7 +297,7 @@ useSeo(() => {
 .aside-line {
   height: 1px;
   margin: 1rem 0;
-  background: linear-gradient(90deg, var(--project-accent), transparent);
+  background: linear-gradient(90deg, var(--accent), transparent);
 }
 
 .content-aside p {
@@ -339,7 +340,7 @@ useSeo(() => {
 }
 
 .markdown-body :deep(a) {
-  color: var(--project-accent);
+  color: var(--accent);
 }
 
 .markdown-body :deep(code) {
@@ -358,7 +359,7 @@ useSeo(() => {
   padding: 1.25rem;
   border: 1px solid var(--line);
   border-radius: 0.2rem;
-  background: #060b12;
+  background: var(--code-bg);
 }
 
 .markdown-body :deep(pre code) {
@@ -370,7 +371,7 @@ useSeo(() => {
 .markdown-body :deep(blockquote) {
   margin: 1.5rem 0;
   padding: 0.2rem 0 0.2rem 1.2rem;
-  border-left: 2px solid var(--project-accent);
+  border-left: 2px solid var(--accent);
   color: var(--text-strong);
 }
 

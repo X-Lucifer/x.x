@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ArrowUpRight, Menu, X } from '@lucide/vue'
+import { ArrowUpRight, Menu, Moon, Sun, X } from '@lucide/vue'
 import { shallowRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import AppLink from '../AppLink.vue'
 import UnicornLogo from '../brand/UnicornLogo.vue'
 import { siteConfig } from '../../data/site'
+import { useTheme } from '../../composables/useTheme'
 
+const { theme, toggleTheme } = useTheme()
 const route = useRoute()
 const mobileOpen = shallowRef(false)
 
@@ -36,18 +38,6 @@ watch(
         </span>
       </AppLink>
 
-      <button
-        class="menu-toggle"
-        type="button"
-        :aria-expanded="mobileOpen"
-        aria-controls="primary-navigation"
-        aria-label="切换导航"
-        @click="mobileOpen = !mobileOpen"
-      >
-        <X v-if="mobileOpen" :size="19" />
-        <Menu v-else :size="19" />
-      </button>
-
       <nav
         id="primary-navigation"
         class="navigation"
@@ -58,12 +48,14 @@ watch(
           v-for="item in navigation"
           :key="item.to"
           class="nav-link"
+          data-spatial="subtle"
           :to="item.to"
         >
           {{ item.label }}
         </AppLink>
         <a
           class="contact-link"
+          data-spatial="subtle"
           :href="siteConfig.github"
           target="_blank"
           rel="noreferrer"
@@ -72,6 +64,32 @@ watch(
           <ArrowUpRight :size="15" />
         </a>
       </nav>
+      <div class="header-actions">
+        <button
+          class="theme-toggle"
+          type="button"
+          role="switch"
+          aria-label="亮色主题"
+          :aria-checked="theme === 'light'"
+          :title="theme === 'dark' ? '切换到亮色主题' : '切换到暗色主题'"
+          @click="toggleTheme"
+        >
+          <span class="theme-toggle-thumb" aria-hidden="true" />
+          <Sun class="theme-sun" :size="16" aria-hidden="true" />
+          <Moon class="theme-moon" :size="15" aria-hidden="true" />
+        </button>
+        <button
+          class="menu-toggle"
+          type="button"
+          :aria-expanded="mobileOpen"
+          aria-controls="primary-navigation"
+          aria-label="切换导航"
+          @click="mobileOpen = !mobileOpen"
+        >
+          <X v-if="mobileOpen" :size="19" />
+          <Menu v-else :size="19" />
+        </button>
+      </div>
     </div>
   </header>
 </template>
@@ -82,8 +100,7 @@ watch(
   z-index: 50;
   top: 0;
   border-bottom: 1px solid var(--line-strong);
-  background: rgb(5 8 6 / 90%);
-  backdrop-filter: blur(18px);
+  background: var(--header-bg);
 }
 
 .header-inner {
@@ -104,8 +121,6 @@ watch(
 }
 
 .brand-logo {
-  --unicorn-fill: #edf4f0;
-  --unicorn-hover-fill: #152019;
   display: block;
   width: 2.65rem;
   height: 2.65rem;
@@ -135,6 +150,7 @@ watch(
 
 .navigation {
   display: flex;
+  margin-left: auto;
   align-items: stretch;
 }
 
@@ -173,7 +189,7 @@ watch(
 
 .nav-link:hover,
 .nav-link.router-link-active {
-  background: rgb(126 223 172 / 5%);
+  background: rgb(var(--accent-rgb) / 5%);
   color: var(--text-strong);
 }
 
@@ -185,7 +201,7 @@ watch(
   min-width: 7.4rem;
   border-right: 1px solid var(--line);
   background: var(--text-strong);
-  color: #07100b;
+  color: var(--surface-0);
   font-weight: 700;
 }
 
@@ -196,6 +212,39 @@ watch(
 .menu-toggle {
   display: none;
 }
+
+.header-actions { display: flex; align-items: center; gap: 0.65rem; padding-left: 1.1rem; }
+.theme-toggle {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  justify-items: center;
+  width: 4.65rem;
+  height: 2.6rem;
+  padding: 4px;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.3rem;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.theme-toggle-thumb {
+  position: absolute;
+  inset: 4px auto 4px 4px;
+  width: calc((100% - 8px) / 2);
+  border-radius: 0.14rem;
+  background: var(--surface-1);
+  box-shadow: 0 1px 4px rgb(var(--shadow-rgb) / 12%);
+  transform: translateX(100%);
+  transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.theme-toggle svg { position: relative; }
+.theme-moon { color: var(--accent); }
+:global([data-theme='light'] .theme-toggle-thumb) { transform: translateX(0); }
+:global([data-theme='light'] .theme-sun) { color: var(--accent); }
+:global([data-theme='light'] .theme-moon) { color: var(--text-dim); }
+.theme-toggle:hover { border-color: var(--accent); }
 
 @media (max-width: 760px) {
   .header-inner {
@@ -232,8 +281,8 @@ watch(
     display: none;
     border: 1px solid var(--line-strong);
     border-bottom: 0;
-    background: rgb(6 10 7 / 98%);
-    box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 48%);
+    background: var(--menu-bg);
+    box-shadow: 0 1.5rem 4rem rgb(var(--shadow-rgb) / var(--shadow-alpha));
   }
 
   .navigation--open {
@@ -264,5 +313,12 @@ watch(
   .nav-link.router-link-active::after {
     transform: scaleY(1);
   }
+}
+@media (max-width: 360px) {
+  .brand { gap: 0.6rem; }
+  .brand-copy strong { font-size: 0.72rem; letter-spacing: 0.08em; }
+  .brand-copy small { display: none; }
+  .header-actions { gap: 0.4rem; padding-left: 0.5rem; }
+  .theme-toggle { width: 4.25rem; }
 }
 </style>

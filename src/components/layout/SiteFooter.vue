@@ -52,8 +52,6 @@ const currentYear = new Date().getFullYear()
 }
 
 .footer-mark {
-  --unicorn-fill: #edf4f0;
-  --unicorn-hover-fill: #152019;
   display: block;
   width: 2.35rem;
   height: 2.35rem;

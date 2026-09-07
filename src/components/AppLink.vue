@@ -34,11 +34,12 @@ function relativePageHref(from: string, to: string) {
 }
 
 const href = computed(() => relativePageHref(route.path, props.to))
+const currentPath = computed(() => route.path.replace(/\/+$/, '') || '/')
 const isActive = computed(() => {
-  if (props.to === '/') return route.path === '/'
-  return route.path === props.to || route.path.startsWith(`${props.to}/`)
+  if (props.to === '/') return currentPath.value === '/'
+  return currentPath.value === props.to || currentPath.value.startsWith(`${props.to}/`)
 })
-const isCurrent = computed(() => route.path === props.to)
+const isCurrent = computed(() => currentPath.value === props.to)
 
 function navigate(event: MouseEvent) {
   if (
@@ -53,7 +54,14 @@ function navigate(event: MouseEvent) {
   }
 
   event.preventDefault()
-  void router.push(props.to)
+  // Match the directory URLs emitted by SSG so refreshing a nested page keeps
+  // resolving its relative styles, scripts and links from the same directory.
+  const target = router.resolve(props.to)
+  void router.push({
+    path: target.path.endsWith('/') ? target.path : `${target.path}/`,
+    query: target.query,
+    hash: target.hash,
+  })
 }
 </script>
 
