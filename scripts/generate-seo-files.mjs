@@ -40,10 +40,14 @@ const contentFiles = (await readdir(contentDir))
   .filter((filename) => filename.endsWith('.md'))
   .sort()
 
-const softwareSlugs = await Promise.all(
+const softwarePages = await Promise.all(
   contentFiles.map(async (filename) => {
     const source = await readFile(join(contentDir, filename), 'utf8')
-    return parseSlug(source, filename)
+    return {
+      slug: parseSlug(source, filename),
+      images: [...source.matchAll(/!\[[^\]]*\]\(\.\.\/\.\.\/(previews\/[\w/-]+\.png)\)/g)]
+        .map(match => absoluteUrl(match[1])),
+    }
   }),
 )
 
@@ -51,13 +55,17 @@ const paths = [
   '/',
   '/software',
   '/about',
-  ...softwareSlugs.map((slug) => `/software/${slug}`),
+  ...softwarePages.map(({ slug }) => `/software/${slug}`),
 ]
 const urls = paths.map(pageUrl)
 
 const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((url) => `  <url>\n    <loc>${escapeXml(url)}</loc>\n  </url>`).join('\n')}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+${urls.map((url) => {
+  const images = softwarePages.find(({ slug }) => pageUrl(`/software/${slug}`) === url)?.images ?? []
+  const imageTags = images.map(image => `\n    <image:image><image:loc>${escapeXml(image)}</image:loc></image:image>`).join('')
+  return `  <url>\n    <loc>${escapeXml(url)}</loc>${imageTags}\n  </url>`
+}).join('\n')}
 </urlset>
 `
 

@@ -22,14 +22,11 @@ export function useSpatialInteraction() {
   let motion: MediaQueryList | undefined
 
   // Analytic damped spring, independent of pointer frequency and display refresh.
-  function advance(spring: Spring, delta: number) {
+  function advance(spring: Spring, envelope: number, sine: number, cosine: number) {
     const offset = spring.value - spring.target
     const decay = 19
     const frequency = 15
     const coefficient = (spring.velocity + decay * offset) / frequency
-    const envelope = Math.exp(-decay * delta)
-    const sine = Math.sin(frequency * delta)
-    const cosine = Math.cos(frequency * delta)
     const position = offset * cosine + coefficient * sine
     spring.value = spring.target + envelope * position
     spring.velocity = envelope * (frequency * (coefficient * cosine - offset * sine) - decay * position)
@@ -63,13 +60,19 @@ export function useSpatialInteraction() {
     frame = 0
     const delta = previous ? Math.min((now - previous) / 1000, 0.05) : 1 / 60
     previous = now
+    const envelope = Math.exp(-19 * delta)
+    const sine = Math.sin(15 * delta)
+    const cosine = Math.cos(15 * delta)
+    const follow = 1 - Math.exp(-delta * 32)
     let moving = false
     for (const surface of surfaces.values()) {
       if (!surface.element.isConnected) { clear(surface); continue }
-      surface.springs.forEach(spring => advance(spring, delta))
-      const [x, y, rx, ry] = surface.springs.map(spring => spring.value) as [number, number, number, number]
+      for (const spring of surface.springs) advance(spring, envelope, sine, cosine)
+      const x = surface.springs[0]!.value
+      const y = surface.springs[1]!.value
+      const rx = surface.springs[2]!.value
+      const ry = surface.springs[3]!.value
       surface.element.style.transform = `perspective(1000px) translate3d(${x.toFixed(3)}px, ${y.toFixed(3)}px, 0) rotateX(${rx.toFixed(3)}deg) rotateY(${ry.toFixed(3)}deg)`
-      const follow = 1 - Math.exp(-delta * 32)
       surface.lightX += (surface.pointerX - surface.lightX) * follow
       surface.lightY += (surface.pointerY - surface.lightY) * follow
       if (surface.light) surface.light.style.transform = `translate3d(${surface.lightX.toFixed(2)}px, ${surface.lightY.toFixed(2)}px, 0)`

@@ -30,7 +30,11 @@ export const routes: RouteRecordRaw[] = [
 
 export const routerOptions: Omit<RouterOptions, 'history'> = {
   routes,
-  scrollBehavior(_to, _from, savedPosition) {
-    return savedPosition ?? { top: 0, behavior: 'smooth' }
+  scrollBehavior(to, _from, savedPosition) {
+    const behavior = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? 'instant' : 'smooth'
+    if (savedPosition) return savedPosition
+    if (to.hash) return { el: to.hash, top: 112, behavior }
+    return { top: 0, behavior }
   },
 }

@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "seo:generate": "node scripts/generate-seo-files.mjs",
+    "test": "node --test tests/*.test.mjs",
     "build": "pnpm seo:generate && vue-tsc -b && vite-ssg build && node scripts/finalize-build.mjs",
     "preview": "vite preview"
   },

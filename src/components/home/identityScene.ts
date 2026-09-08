@@ -134,6 +134,8 @@ export function createIdentityScene(
     geometry.rotateX(Math.PI)
     geometry.scale(0.0027, 0.0027, 0.0027)
     geometry.center()
+    // The hologram and surface sampler use positions/normals, never UVs.
+    geometry.deleteAttribute('uv')
     hologram = own(new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true,
       blending: THREE.AdditiveBlending,
@@ -239,21 +241,23 @@ export function createIdentityScene(
     const sample = new THREE.Vector3()
     const sampler = new MeshSurfaceSampler(sculpture).setRandomGenerator(random).build()
     const count = compact.matches ? 14000 : 24000
-    const positions = new Float32Array(count * 3)
-    const dispersions = new Float32Array(count * 3)
-    const seeds = new Float32Array(count)
+    const particleData = new Float32Array(count * 7)
     for (let i = 0; i < count; i++) {
+      const offset = i * 7
       sampler.sample(sample)
-      sample.toArray(positions, i * 3)
+      sample.toArray(particleData, offset)
       const angle = random() * Math.PI * 2
       const radius = 0.3 + random() * 0.6
-      dispersions.set([Math.cos(angle) * radius, (random() - 0.5) * 0.7, Math.sin(angle) * radius], i * 3)
-      seeds[i] = random()
+      particleData[offset + 3] = Math.cos(angle) * radius
+      particleData[offset + 4] = (random() - 0.5) * 0.7
+      particleData[offset + 5] = Math.sin(angle) * radius
+      particleData[offset + 6] = random()
     }
     const particleGeometry = own(new THREE.BufferGeometry())
-    particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-    particleGeometry.setAttribute('aScatter', new THREE.BufferAttribute(dispersions, 3))
-    particleGeometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 1))
+    const particleBuffer = new THREE.InterleavedBuffer(particleData, 7)
+    particleGeometry.setAttribute('position', new THREE.InterleavedBufferAttribute(particleBuffer, 3, 0))
+    particleGeometry.setAttribute('aScatter', new THREE.InterleavedBufferAttribute(particleBuffer, 3, 3))
+    particleGeometry.setAttribute('aSeed', new THREE.InterleavedBufferAttribute(particleBuffer, 1, 6))
     const particleMaterial = own(new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
       uniforms: { uTime: { value: 0 }, uMorph: { value: 0 }, uDpr: { value: 1 }, uPointer: { value: pointer }, uLightMode: { value: 0 }, uAspect: { value: 1 }, uHover: { value: 0 }, uSpeed: { value: 0 }, uImpulse: { value: 0 } },
@@ -348,7 +352,9 @@ export function createIdentityScene(
     const dustCount = compact.matches ? 100 : 220
     const dustPositions = new Float32Array(dustCount * 3)
     for (let i = 0; i < dustCount; i++) {
-      dustPositions.set([(random() - 0.5) * 8, (random() - 0.5) * 7, -1 - random() * 4], i * 3)
+      dustPositions[i * 3] = (random() - 0.5) * 8
+      dustPositions[i * 3 + 1] = (random() - 0.5) * 7
+      dustPositions[i * 3 + 2] = -1 - random() * 4
     }
     const dustGeometry = own(new THREE.BufferGeometry())
     dustGeometry.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3))
@@ -405,6 +411,13 @@ export function createIdentityScene(
     scan = new THREE.Mesh(own(new THREE.PlaneGeometry(4.7, 4.8)), scanMaterial)
     scan.position.z = 0.7
     scene.add(scan)
+    // Only groups move on the CPU. Freeze local matrices on the renderable leaves.
+    scene.traverse(object => {
+      if (!object.children.length && object !== camera) {
+        object.updateMatrix()
+        object.matrixAutoUpdate = false
+      }
+    })
     host.append(canvas)
     canvas.addEventListener('webglcontextlost', handleContextLoss)
     host.addEventListener('pointermove', pointerMove, { passive: true })

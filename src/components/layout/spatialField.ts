@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { observeTheme } from '../../composables/useTheme'
+import { createSpatialGrid } from './spatialGeometry'
 
 /** A persistent, low-resolution world shared by every route. */
 export function createSpatialField(host: HTMLElement) {
@@ -76,6 +77,7 @@ export function createSpatialField(host: HTMLElement) {
   let renderHeight = 0
   let floatingMaterial: THREE.ShaderMaterial
   let matrixGeometry: THREE.BufferGeometry | undefined
+  let matrixPositions: THREE.BufferAttribute | undefined
   const matrixScale = { value: 1 }
   const gridMaterial = own(new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
@@ -136,15 +138,10 @@ export function createSpatialField(host: HTMLElement) {
   }
 
   try {
-    const grid: number[] = []
-    for (let x = -22; x <= 22; x++) {
-      for (let z = -36; z < 9; z += 0.5) grid.push(x, -2.1, z, x, -2.1, z + 0.5)
-    }
-    for (let z = -36; z <= 9; z++) {
-      for (let x = -22; x < 22; x += 0.5) grid.push(x, -2.1, z, x + 0.5, -2.1, z)
-    }
+    const grid = createSpatialGrid()
     const gridGeometry = own(new THREE.BufferGeometry())
-    gridGeometry.setAttribute('position', new THREE.Float32BufferAttribute(grid, 3))
+    gridGeometry.setAttribute('position', new THREE.BufferAttribute(grid.positions, 3))
+    gridGeometry.setIndex(new THREE.BufferAttribute(grid.indices, 1))
     world.add(new THREE.LineSegments(gridGeometry, gridMaterial))
 
     matrixGeometry = own(new THREE.BufferGeometry())
@@ -260,6 +257,10 @@ export function createSpatialField(host: HTMLElement) {
     const connectionGeometry = own(new THREE.BufferGeometry())
     connectionGeometry.setAttribute('position', new THREE.Float32BufferAttribute(connections, 3))
     world.add(new THREE.LineSegments(connectionGeometry, wireMaterial))
+    // Motion is encoded in shaders; these local transforms never change.
+    world.traverse(object => { object.updateMatrix(); object.matrixAutoUpdate = false })
+    matrix.updateMatrix()
+    matrix.matrixAutoUpdate = false
 
     stopTheme = observeTheme(theme => {
       const light = theme === 'light'
@@ -337,12 +338,30 @@ export function createSpatialField(host: HTMLElement) {
     camera.updateProjectionMatrix()
     interaction.uAspect.value = camera.aspect
     matrixScale.value = scale
-    const matrixPoints: number[] = []
     const spacing = matchMedia('(pointer: coarse)').matches ? 40 : 28
-    for (let y = spacing / 2; y < height; y += spacing) {
-      for (let x = spacing / 2; x < width; x += spacing) matrixPoints.push(x / width * 2 - 1, 1 - y / height * 2, 0)
+    const count = Math.max(0, Math.ceil((width - spacing / 2) / spacing))
+      * Math.max(0, Math.ceil((height - spacing / 2) / spacing))
+    if (!matrixPositions || matrixPositions.count < count) {
+      // Dispose before replacing the attribute so Three.js can release the old
+      // GPU buffer and VAO. Smaller viewports reuse the existing allocation.
+      matrixGeometry?.dispose()
+      matrixPositions = new THREE.BufferAttribute(new Float32Array(count * 3), 3)
+        .setUsage(THREE.DynamicDrawUsage)
+      matrixGeometry?.setAttribute('position', matrixPositions)
     }
-    matrixGeometry?.setAttribute('position', new THREE.Float32BufferAttribute(matrixPoints, 3))
+    const points = matrixPositions.array
+    let offset = 0
+    for (let y = spacing / 2; y < height; y += spacing) {
+      for (let x = spacing / 2; x < width; x += spacing) {
+        points[offset++] = x / width * 2 - 1
+        points[offset++] = 1 - y / height * 2
+        points[offset++] = 0
+      }
+    }
+    matrixGeometry?.setDrawRange(0, count)
+    matrixPositions.clearUpdateRanges()
+    matrixPositions.addUpdateRange(0, count * 3)
+    matrixPositions.needsUpdate = true
     render(1)
   }
 

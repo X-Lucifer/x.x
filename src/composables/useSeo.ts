@@ -11,6 +11,7 @@ export interface SeoConfig {
   keywords?: readonly string[]
   type?: 'website' | 'article' | 'profile'
   robots?: string
+  image?: { path: string; alt: string; width: number; height: number }
   structuredData?: StructuredData | StructuredData[]
 }
 
@@ -78,8 +79,8 @@ export function useSeo(config: MaybeRefOrGetter<SeoConfig>) {
     const structuredData = seo.structuredData
       ? asSchemaGraph(seo.structuredData)
       : undefined
-    const socialImage = absoluteUrl('/social-card.png')
-    const socialImageAlt = `${siteConfig.brand} 独角兽标志与软件工程作品站`
+    const socialImage = absoluteUrl(seo.image?.path ?? '/social-card.png')
+    const socialImageAlt = seo.image?.alt ?? `${siteConfig.brand} 独角兽标志与软件工程作品站`
 
     return {
       title: seo.title,
@@ -94,7 +95,7 @@ export function useSeo(config: MaybeRefOrGetter<SeoConfig>) {
         { name: 'description', content: seo.description },
         { name: 'keywords', content: keywords.join(', ') },
         { name: 'author', content: siteConfig.name },
-        { name: 'robots', content: seo.robots ?? 'index, follow, max-image-preview:large' },
+        { name: 'robots', content: seo.robots ?? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },
         { property: 'og:locale', content: 'zh_CN' },
         { property: 'og:site_name', content: siteConfig.brand },
         { property: 'og:type', content: seo.type ?? 'website' },
@@ -104,8 +105,8 @@ export function useSeo(config: MaybeRefOrGetter<SeoConfig>) {
         { property: 'og:image', content: socialImage },
         { property: 'og:image:secure_url', content: socialImage },
         { property: 'og:image:type', content: 'image/png' },
-        { property: 'og:image:width', content: '1200' },
-        { property: 'og:image:height', content: '630' },
+        { property: 'og:image:width', content: String(seo.image?.width ?? 1200) },
+        { property: 'og:image:height', content: String(seo.image?.height ?? 630) },
         { property: 'og:image:alt', content: socialImageAlt },
         { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:title', content: seo.title },
@@ -117,7 +118,8 @@ export function useSeo(config: MaybeRefOrGetter<SeoConfig>) {
         ? [
             {
               type: 'application/ld+json',
-              textContent: JSON.stringify(structuredData),
+              key: 'page-schema',
+              textContent: JSON.stringify(structuredData).replaceAll('<', '\\u003c'),
             },
           ]
         : [],

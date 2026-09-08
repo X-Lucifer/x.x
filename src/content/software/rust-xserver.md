@@ -11,38 +11,64 @@ stack: [Rust 2024, Actix Web, Clap, Tracing]
 featured: true
 repo: https://github.com/X-Lucifer/rust-xserver
 demo:
+seoTitle: XServer Rust — Actix Web 静态文件服务器与双栈监听 | X.LUCIFER
+seoDescription: XServer Rust 是基于 Actix Web 的轻量静态文件服务器，支持自定义目录、端口与监听地址，提供 IPv4/IPv6 监听、局域网访问地址和 Tracing 请求日志。适合前端构建产物预览与本地静态站点服务。
+keywords: [XServer Rust, Rust 静态文件服务器, Actix Web, 前端构建预览, IPv6, Tracing]
+languages: [Rust]
+platforms: [Windows, Linux, macOS]
+appCategory: DeveloperApplication
+features: [静态目录与 index.html 服务, 端口与监听地址配置, IPv4 / IPv6 监听, 局域网地址发现, 请求 ID 与结构化日志]
 ---
 
-## 项目概述
+## XServer Rust 是什么
 
-XServer / Rust 是一个用于托管静态目录的命令行 HTTP 服务。项目面向前端构建产物预览、局域网联调和交付验收，将服务目录、端口与监听地址收敛为可直接携带的单一可执行工具。
+XServer Rust 是使用 Rust 与 Actix Web 实现的命令行静态文件服务器。它将指定目录作为站点根目录，通过一个可执行文件提供 HTTP 访问，适合预览前端构建产物、演示静态页面，以及在局域网内临时提供静态资源。
 
-## 已实现的服务能力
+项目重点是启动参数明确、访问地址可见和请求可追踪。使用已构建的程序时，不需要额外启动 Node.js 开发服务器。
 
-- `--port` 配置 HTTP 端口，合法范围为 `1000–65535`
-- `--dir` 指定静态资源根目录，启动前校验路径存在且为目录
-- `--host` 可选择显式绑定地址；未指定时同时尝试 IPv4 与 IPv6 全接口监听
-- 自动枚举非回环、非链路本地网络接口并输出可访问 URL
-- 默认以目录内的 `index.html` 作为索引文件
-- 每个请求生成 UUID，并写入 `X-Request-Id` 响应头
-- 写入 `Server: xserver` 标识
-- 记录客户端、方法、路径、内容长度、响应状态与处理耗时
-- 通过 `RUST_LOG` 调整日志过滤级别
+## 静态服务与网络能力
 
-## 技术架构
+- **目录服务**：将指定目录挂载到 `/`，目录首页使用 `index.html`。启动时检查目录是否存在、是否为文件夹，并在日志中展示规范化路径。
+- **监听配置**：支持端口和指定 Host。未指定 Host 时监听 IPv4 通配地址，并尝试建立 IPv6 监听；指定 Host 时按给定地址绑定。
+- **地址发现**：启动后列出本机、localhost 和可用网络接口地址，过滤重复及链路本地地址，IPv6 URL 使用方括号格式。
+- **请求标识**：为请求生成 UUID，并在响应中写入 `X-Request-Id`，方便将浏览器请求与日志关联。
+- **结构化日志**：记录客户端地址、请求方法、URI、内容长度、响应状态和处理耗时，使用 Tracing 输出，并支持 `RUST_LOG` 调整日志过滤。
 
-服务基于 **Rust 2024、Actix Web 与 Actix Files**。Clap 负责命令行解析，`if-addrs` 负责网络接口枚举，Tracing 与 Tracing Subscriber 提供结构化日志，UUID 用于请求关联。
+## 启动参数
 
-请求日志以 Actix 中间件实现：进入请求时创建关联标识并记录请求元数据，处理完成后写入响应头与状态、耗时日志。监听层显式创建 IPv4 listener，并在系统支持时追加 IPv6 listener。
+| 参数 | 默认值 | 用途 |
+| --- | --- | --- |
+| `-p` / `--port` | `22345` | 指定 HTTP 端口；代码检查范围为 1000–65535 |
+| `-d` | `.` | 指定静态文件根目录 |
+| `--host` | 不指定 | 限定监听地址，例如 `127.0.0.1` |
+| `-h` / `--help` | — | 查看命令帮助 |
 
-## 构建与交付
+端口解析后若低于允许范围，会警告并回退到默认端口；无法解析为有效整数的输入由 Clap 拒绝。
 
-项目结构保持紧凑，主要逻辑集中在 `src/main.rs`。Release 模式通过 Cargo 构建，Windows 资源由 `build.rs`、`winresource`、PNG 与 ICO 工具链嵌入可执行文件；Cargo 清单声明 MIT License。
+## 构建与使用
 
-## 适用场景与边界
+在安装 Rust 工具链的环境中，从仓库根目录构建：
 
-当前实现提供静态文件与目录索引文件服务，不包含 TLS、身份认证、反向代理、内容压缩或显式的客户端路由通配回退。生产公网场景应在前置网关中补齐 HTTPS、安全策略与缓存控制。
+```bash
+cargo build --release
+```
 
-## Go 对照实现
+使用构建后的程序提供 `dist` 目录，仅监听本机：
 
-[Go 版本](https://github.com/X-Lucifer/go-xserver) 保持相同的端口、目录与局域网访问目标，但采用 Gin、标准库 flag 和 Zerolog。两个仓库用于直接比较 Rust 与 Go 在网络服务、中间件和可执行文件交付上的实现方式。
+```bash
+./target/release/xserver --host 127.0.0.1 -p 8080 -d ./dist
+```
+
+需要局域网访问时省略 `--host`，再使用启动日志中列出的接口地址访问。Windows 对应执行文件为 `xserver.exe`；其他系统按目标平台构建。
+
+## 工程实现
+
+服务主体采用 Rust 2024 Edition、Actix Web 与 Actix Files。Clap 解析命令行，`if-addrs` 枚举网络接口，Tracing 记录结构化请求，UUID 生成关联标识。Windows 构建通过资源脚本嵌入应用图标与版本信息。
+
+与 [Go 版 XServer](../go-xserver/) 相比，Rust 版额外提供 `--host` 参数，并显式组织默认 IPv4 与可选 IPv6 监听逻辑。两者都围绕静态文件服务工作，没有动态业务 API。
+
+## 服务边界
+
+服务支持目录首页，但不会将未知路径统一回退到根 `index.html`。使用 History 路由的 SPA 直接刷新嵌套路由时，需要额外配置具有回退能力的服务；SSG 生成了对应目录首页的页面可按目录访问。
+
+项目没有额外配置 TLS 终止、身份认证或反向代理管理。用于公开长期服务时，应由部署环境补齐相应能力。源码和完整构建信息见 [项目 README](https://github.com/X-Lucifer/rust-xserver#readme)。

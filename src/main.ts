@@ -18,7 +18,13 @@ function routerBase() {
 export const createApp = ViteSSG(App, {
   ...routerOptions,
   base: routerBase(),
-})
+}, ({ router }) => {
+  router.beforeResolve(async to => {
+    if (to.name !== 'software-detail') return
+    const { loadSoftwareContent } = await import('./data/softwareContent')
+    await loadSoftwareContent(String(to.params.slug))
+  })
+}, { hydration: import.meta.env.PROD })
 
 export function includedRoutes() {
   return [

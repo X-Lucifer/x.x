@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://xlucifer.top/</loc>
   </url>
@@ -20,9 +20,14 @@
   </url>
   <url>
     <loc>https://xlucifer.top/software/wails-obsidian-lite/</loc>
+    <image:image><image:loc>https://xlucifer.top/previews/wails-obsidian-lite/obsidian-lite-overview.png</image:loc></image:image>
+    <image:image><image:loc>https://xlucifer.top/previews/wails-obsidian-lite/obsidian-lite-settings.png</image:loc></image:image>
+    <image:image><image:loc>https://xlucifer.top/previews/wails-obsidian-lite/obsidian-lite-live.png</image:loc></image:image>
   </url>
   <url>
     <loc>https://xlucifer.top/software/x-superresolution/</loc>
+    <image:image><image:loc>https://xlucifer.top/previews/x-superresolution/workspace-light.png</image:loc></image:image>
+    <image:image><image:loc>https://xlucifer.top/previews/x-superresolution/workspace-dark.png</image:loc></image:image>
   </url>
   <url>
     <loc>https://xlucifer.top/software/x-webdav-server/</loc>

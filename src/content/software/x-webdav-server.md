@@ -11,62 +11,88 @@ stack: [ASP.NET Core 10, Native AOT, Vue 3, SQLite]
 featured: true
 repo: https://github.com/X-Lucifer/x.webdav.server
 demo:
+seoTitle: X.WebDAV.Server — 自托管 WebDAV、CalDAV 与 CardDAV 服务 | X.LUCIFER
+seoDescription: X.WebDAV.Server 基于 ASP.NET Core 10 与 Native AOT，提供 WebDAV 文件、CalDAV 日历、CardDAV 联系人服务，配套 Vue 管理端、SQLite 用户存储和 Docker 部署。查看协议功能、数据组织与运行边界。
+keywords: [X.WebDAV.Server, 自托管 WebDAV, CalDAV 服务端, CardDAV 服务端, ASP.NET Core, Native AOT, Docker]
+languages: [C#, TypeScript]
+platforms: [Linux x64 / Docker]
+appCategory: UtilitiesApplication
+features: [WebDAV 文件操作, CalDAV 日历集合, CardDAV 联系人集合, 用户目录隔离, Web 文件与用户管理, Docker 与 Native AOT 交付]
 ---
 
-## 项目概述
+## X.WebDAV.Server 是什么
 
-X.WebDAV.Server 是面向个人与小型团队自托管场景的 DAV 协议服务。系统在统一部署中提供 WebDAV 文件、CalDAV 日历与 CardDAV 联系人入口，并附带用户管理和协议数据管理界面，使服务端不仅能够响应客户端同步，也具备独立的日常运维入口。
+X.WebDAV.Server 是面向自托管场景的 DAV 服务端，将文件、日历和联系人访问整合到同一个 ASP.NET Core 10 应用中。后端分别实现 WebDAV、CalDAV、CardDAV 协议入口，前端提供 Vue 3 管理界面，用户信息保存在 SQLite，文件与集合内容存放在本地目录。
 
-## 协议能力
+项目适合需要自行管理数据存储、通过 DAV 客户端访问资源，并希望保留浏览器管理入口的场景。Docker 构建采用 Linux x64 Native AOT 发布。
 
-公共 DAV 基础层实现以下方法：
+## 三类 DAV 协议能力
 
-`OPTIONS`、`GET`、`HEAD`、`PROPFIND`、`MKCOL`、`PUT`、`DELETE`、`REPORT`、`MOVE`、`COPY`、`LOCK`、`UNLOCK` 与 `PROPPATCH`。
+| 服务 | 路径前缀 | 主要用途 |
+| --- | --- | --- |
+| WebDAV | `/webdav/` | 文件上传、下载、目录和属性操作 |
+| CalDAV | `/caldav/` | iCalendar 日历集合与 `.ics` 资源 |
+| CardDAV | `/carddav/` | vCard 地址簿与 `.vcf` 资源 |
+| Web 管理端 | `/admin/` | 浏览器登录、文件与用户管理 |
 
-在此基础上：
+### 文件与集合操作
 
-- **WebDAV** 提供文件与目录资源、属性查询和集合操作
-- **CalDAV** 增加 `MKCALENDAR`、日历资源属性、principal 发现、`.well-known` 跳转、ICS 导入校验、REPORT 查询与同步令牌
-- **CardDAV** 提供地址簿资源属性、principal 发现、VCF 导入处理、REPORT 查询与同步令牌
-- 资源路径按已认证用户隔离到独立数据目录
-- Basic Authentication 用于 DAV 客户端，JWT Bearer 用于管理 API
+共享 DAV 中间件实现 `OPTIONS`、`GET`、`HEAD`、`PROPFIND`、`MKCOL`、`PUT`、`DELETE`、`MOVE`、`COPY`、`LOCK`、`UNLOCK`、`PROPPATCH` 和 `REPORT` 的分发。支持资源属性查询、集合创建、文件读写、移动复制、锁与属性更新。
 
-## 管理端能力
+CalDAV 提供 `MKCALENDAR`、日历查询和批量读取；CardDAV 提供地址簿查询与批量读取。服务包含 `/.well-known` 发现入口和集合同步令牌，以便客户端定位相应用户资源。
 
-Vue 管理端覆盖协议数据和账号的日常操作：
+### 日历与联系人同步边界
 
-- 在 WebDAV、CalDAV 与 CardDAV 三类空间之间切换
-- 分页浏览目录，创建目录、上传、重命名、删除与批量删除
-- 复制完整协议 URL
-- 预览图片，查看并编辑文本类文件
-- 创建用户、重置密码和删除用户
-- 删除用户前统计其三类协议目录的文件数、目录数与空间占用，并执行二次确认
-- 当前登录用户可修改自身密码
+日历查询包含组件和时间范围处理，日历与联系人都支持 `sync-collection`。客户端令牌与服务端一致时返回空变更结果；不一致时返回当前集合内容。实现没有保存完整历史增量日志，不能将其等同于包含删除历史的增量同步服务。
 
-## 技术架构
+具体 DAV 客户端的兼容情况需要结合客户端使用的协议特性验证，不能仅凭支持某个方法名推定所有扩展均完整实现。
 
-### 服务端
+## Web 管理功能
 
-后端基于 **ASP.NET Core 10**，使用 `CreateSlimBuilder` 与 Kestrel 组织轻量宿主。DAV 协议由独立中间件实现，管理接口采用 Minimal API；Microsoft.Data.Sqlite 持久化用户账户，NLog 负责日志，Forwarded Headers 用于反向代理场景。
+### 文件管理
 
-协议数据直接保存到 WebDAV、CalDAV、CardDAV 对应的文件系统目录，账号信息保存在 SQLite。服务启动时会初始化目录和用户表，并分别注册协议认证、管理认证、静态管理端与协议中间件。
+管理端可以浏览协议目录、创建文件夹、上传文件、下载或查看原始内容、读取和保存文本内容，并提供移动、重命名、删除与批量删除操作。相关 API 统一放在 `/api/manage/files` 路径下。
 
-### 管理前端
+### 用户与数据管理
 
-管理界面采用 **Vue 3、TypeScript、Vite、Pinia、Axios 与 Naive UI**。路由守卫和 Pinia 管理登录状态，文件管理器按协议类型复用统一 API，并针对桌面与移动宽度调整操作布局。
+用户接口提供登录、修改自身密码，以及用户列表、创建、删除和密码重置。删除用户前可查询数据影响，统计 WebDAV、CalDAV 和 CardDAV 下的用户目录及文件情况；存在关联数据时要求显式确认删除。
 
-## 构建与容器交付
+DAV 请求使用 Basic Authentication，管理接口使用 JWT。存储路径按协议类型与用户名组织，创建用户时准备对应目录，删除用户时同步处理其关联资源。
 
-项目使用多阶段 Docker 构建：
+## 数据与部署结构
 
-1. Node.js 阶段编译 Vue 管理端
-2. .NET SDK 阶段构建并以 Linux x64 Native AOT 发布后端
-3. `runtime-deps` 阶段组合原生服务与静态管理资源
+| 配置或目录 | 用途 |
+| --- | --- |
+| `DATA_DIR` | DAV 内容根目录；容器默认 `/data` |
+| `STATIC_ROOT` | 管理端静态文件根目录；容器默认 `/app/wwwroot` |
+| `/app/database` | SQLite 数据库存储位置 |
+| `/app/nlog` | 日志持久化目录 |
+| 容器端口 `8080` | HTTP 服务；仓库 Compose 示例映射为主机 `9090` |
 
-容器默认监听 `8080`，以 `/data` 作为协议数据卷，并允许通过 `STATIC_ROOT` 与 `DATA_DIR` 调整静态资源和持久化位置。仓库同时提供 Docker Compose 配置。
+Dockerfile 分阶段构建 Vue 前端和 .NET 后端，将 Native AOT 程序与管理页面复制到运行镜像。管理页面保存在镜像内的 `/app/wwwroot/admin`，与挂载到 `/data` 的用户内容分开，避免数据卷覆盖管理页面。
 
-## 部署边界
+## 本地构建与预览
 
-DAV 使用普通浏览器较少见的 HTTP 方法与协议头。经过 Cloudflare、Nginx 或其他安全网关时，需要显式放行 DAV 方法、深度与锁相关请求头，并处理部分客户端缺少 `User-Agent` 的情况。
+准备 Docker，在源码根目录构建镜像：
 
-用户信息持久化在 SQLite，协议文件持久化在数据卷；当前锁状态和扩展属性保存在服务进程内存中，重启后不会保留。生产部署应在首次启动时替换初始凭据与 JWT 签名配置，并由反向代理提供 HTTPS、访问限制和备份策略。
+```bash
+docker build -t x-webdav-server:local .
+```
+
+以下示例仅映射本机地址，并使用独立数据卷保存内容、数据库和日志：
+
+```bash
+docker run --rm -p 127.0.0.1:9090:8080 \
+  -v webdav-data:/data \
+  -v webdav-database:/app/database \
+  -v webdav-logs:/app/nlog \
+  x-webdav-server:local
+```
+
+启动后访问 `http://127.0.0.1:9090/admin/`。用于正式部署前应按项目配置修改初始账号和 JWT 签名配置，并为 Basic Authentication 入口配置 HTTPS。完整构建方式见 [项目仓库](https://github.com/X-Lucifer/x.webdav.server)。
+
+## 工程实现与持久化边界
+
+后端使用 `CreateSlimBuilder`、Minimal API、源生成 JSON 序列化与 SQLite，日志由 NLog 输出。协议中间件共享路径、属性、锁与 XML 响应处理，再由各协议实现专有集合行为。
+
+用户数据库和 DAV 文件可以通过卷持久化。锁信息与 DAV 自定义属性保存在进程内存中，重启后不会保留。项目没有实现跨实例共享锁或完整分布式一致性，部署规划应遵循这一边界。

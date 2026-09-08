@@ -1,18 +1,22 @@
 <script setup lang="ts">
-import { ArrowLeft, ArrowUpRight, Code2 } from '@lucide/vue'
+import { ArrowUpRight, Code2 } from '@lucide/vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import AppLink from '../components/AppLink.vue'
-import { pageUrl, siteUrl, useSeo } from '../composables/useSeo'
+import { absoluteUrl, pageUrl, personSchema, siteUrl, useSeo } from '../composables/useSeo'
 import { getSoftwareBySlug } from '../data/software'
+import { getSoftwareContent } from '../data/softwareContent'
+import { getSoftwareSeo } from '../data/softwareSeo'
 
 const route = useRoute()
 const project = computed(() => getSoftwareBySlug(String(route.params.slug)))
+const detail = computed(() => getSoftwareSeo(String(route.params.slug)))
 
 useSeo(() => {
   const currentProject = project.value
 
-  if (!currentProject) {
+  const metadata = detail.value
+  if (!currentProject || !metadata) {
     return {
       title: '软件项目未找到 | X.LUCIFER',
       description: '请求的软件项目不存在，请返回 X.LUCIFER 软件作品列表。',
@@ -22,46 +26,76 @@ useSeo(() => {
   }
 
   const path = `/software/${currentProject.slug}`
-  const title = `${currentProject.title} — ${currentProject.category}开源项目 | X.LUCIFER`
-  const description = `${currentProject.summary} 核心技术栈：${currentProject.stack.join('、')}。查看项目能力、工程实现与开源仓库。`
+  const canonical = pageUrl(path)
+  const { title, description } = metadata
+  const screenshots = metadata.screenshots.map(image => ({
+    '@type': 'ImageObject', url: absoluteUrl(image.path),
+    caption: image.alt, width: image.width, height: image.height,
+  }))
 
   return {
     title,
     description,
     path,
-    type: 'article',
-    keywords: [
-      currentProject.title,
-      currentProject.category,
-      ...currentProject.stack,
-      '开源项目',
-      '软件工程',
-      'X.LUCIFER',
+    keywords: metadata.keywords,
+    image: metadata.screenshots[0],
+    structuredData: [
+      personSchema(),
+      {
+        '@type': 'WebSite', '@id': `${siteUrl}#website`,
+        url: siteUrl, name: 'X.LUCIFER', inLanguage: 'zh-CN',
+        publisher: { '@id': `${siteUrl}#person` },
+      },
+      {
+        '@type': 'WebPage', '@id': `${canonical}#webpage`,
+        name: title, url: canonical, description, inLanguage: 'zh-CN',
+        isPartOf: { '@id': `${siteUrl}#website` },
+        mainEntity: { '@id': `${canonical}#software` },
+        breadcrumb: { '@id': `${canonical}#breadcrumb` },
+        ...(screenshots.length ? { primaryImageOfPage: screenshots[0] } : {}),
+      },
+      {
+        '@type': 'SoftwareApplication', '@id': `${canonical}#software`,
+        name: currentProject.title, url: canonical, description,
+        applicationCategory: metadata.applicationCategory,
+        operatingSystem: metadata.operatingSystems.join(', '),
+        featureList: metadata.features,
+        screenshot: screenshots.length ? screenshots : undefined,
+        sameAs: currentProject.repo,
+        author: { '@id': `${siteUrl}#person` },
+        mainEntityOfPage: { '@id': `${canonical}#webpage` },
+      },
+      {
+        '@type': 'SoftwareSourceCode', '@id': `${canonical}#source`,
+        name: currentProject.title, codeRepository: currentProject.repo,
+        programmingLanguage: metadata.programmingLanguages,
+        runtimePlatform: currentProject.stack.join(', '),
+        targetProduct: { '@id': `${canonical}#software` },
+        author: { '@id': `${siteUrl}#person` },
+      },
+      {
+        '@type': 'BreadcrumbList', '@id': `${canonical}#breadcrumb`,
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: '首页', item: siteUrl },
+          { '@type': 'ListItem', position: 2, name: '软件作品', item: pageUrl('/software') },
+          { '@type': 'ListItem', position: 3, name: currentProject.title, item: canonical },
+        ],
+      },
     ],
-    structuredData: {
-      '@type': 'SoftwareSourceCode',
-      '@id': `${pageUrl(path)}#software`,
-      name: currentProject.title,
-      url: pageUrl(path),
-      description,
-      codeRepository: currentProject.repo,
-      programmingLanguage: currentProject.stack,
-      applicationCategory: currentProject.category,
-      dateCreated: currentProject.year,
-      inLanguage: 'zh-CN',
-      author: { '@id': `${siteUrl}#person` },
-    },
   }
 })
 </script>
 
 <template>
-  <article v-if="project" class="detail">
+  <article v-if="project" class="detail" :data-software-slug="project.slug">
     <header class="detail-hero container">
-      <AppLink class="back-link" to="/software">
-        <ArrowLeft :size="16" />
-        返回软件列表
-      </AppLink>
+      <nav class="detail-breadcrumb" aria-label="面包屑">
+        <AppLink to="/">首页</AppLink>
+        <span aria-hidden="true">/</span>
+        <AppLink to="/software">软件作品</AppLink>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{{ project.title }}</span>
+      </nav>
 
       <div class="detail-heading">
         <div>
@@ -121,9 +155,11 @@ useSeo(() => {
       <aside class="content-aside">
         <span>PROJECT / BRIEF</span>
         <div class="aside-line" aria-hidden="true" />
-        <p>依据公开源码与项目文档整理</p>
+        <nav v-if="detail?.headings.length" class="content-toc" aria-label="本文目录">
+          <a v-for="heading in detail.headings" :key="heading.id" :href="`#${heading.id}`">{{ heading.text }}</a>
+        </nav>
       </aside>
-      <div class="markdown-body" v-html="project.html" />
+      <div class="markdown-body" v-html="getSoftwareContent(project.slug)" />
     </div>
   </article>
 
@@ -161,22 +197,27 @@ useSeo(() => {
   content: '';
 }
 
-.back-link {
-  display: inline-flex;
+.detail-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   color: var(--text-muted);
   font-size: 0.82rem;
+}
+
+.detail-breadcrumb a {
+  color: inherit;
   text-decoration: none;
 }
 
-.back-link:hover {
+.detail-breadcrumb a:hover {
   color: var(--accent);
 }
 
 .detail-heading {
   display: grid;
-  grid-template-columns: 1fr minmax(18rem, 0.65fr);
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.65fr);
   gap: 3rem;
   align-items: end;
   margin-top: 4rem;
@@ -189,10 +230,11 @@ useSeo(() => {
 
 .detail-heading h1 {
   color: var(--text-strong);
-  font-size: clamp(3rem, 8vw, 7rem);
+  font-size: clamp(2rem, 5.5vw, 6rem);
   font-weight: 560;
   letter-spacing: -0.07em;
   line-height: 0.9;
+  overflow-wrap: anywhere;
 }
 
 .detail-heading > p {
@@ -287,6 +329,8 @@ useSeo(() => {
 }
 
 .content-aside {
+  position: sticky;
+  top: 7rem;
   align-self: start;
   color: var(--text-dim);
   font-family: var(--font-mono);
@@ -294,15 +338,31 @@ useSeo(() => {
   letter-spacing: 0.07em;
 }
 
+.content-toc {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1.75rem;
+}
+
+.content-toc a {
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  letter-spacing: 0;
+  line-height: 1.65;
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.content-toc a:hover,
+.content-toc a:focus-visible {
+  color: var(--accent);
+}
+
 .aside-line {
   height: 1px;
   margin: 1rem 0;
   background: linear-gradient(90deg, var(--accent), transparent);
-}
-
-.content-aside p {
-  margin: 0;
-  line-height: 1.7;
 }
 
 .markdown-body {
@@ -314,6 +374,7 @@ useSeo(() => {
 
 .markdown-body :deep(h2),
 .markdown-body :deep(h3) {
+  scroll-margin-top: 7rem;
   color: var(--text-strong);
   letter-spacing: -0.035em;
 }
@@ -335,8 +396,47 @@ useSeo(() => {
 }
 
 .markdown-body :deep(p),
-.markdown-body :deep(ul) {
+.markdown-body :deep(ul),
+.markdown-body :deep(ol) {
   margin: 0 0 1.25rem;
+}
+
+.markdown-body :deep(img) {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 1.5rem 0 2rem;
+  border: 1px solid var(--line);
+  border-radius: 0.3rem;
+  background: var(--surface-1);
+}
+
+.markdown-body :deep(table) {
+  width: 100%;
+  margin: 1.5rem 0 2rem;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.markdown-body :deep(th),
+.markdown-body :deep(td) {
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdown-body :deep(th) {
+  color: var(--text-strong);
+  font-weight: 550;
+  background: var(--surface-2);
+}
+
+.markdown-body :deep(strong) {
+  color: var(--text-strong);
+  font-weight: 550;
 }
 
 .markdown-body :deep(a) {
@@ -391,7 +491,7 @@ useSeo(() => {
 @media (max-width: 760px) {
   .detail-heading,
   .content-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .detail-heading {
@@ -411,9 +511,22 @@ useSeo(() => {
   .content-layout {
     gap: 2.5rem;
   }
+
+  .content-aside {
+    position: static;
+  }
+
+  .content-toc {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 480px) {
+  .detail-heading h1 {
+    font-size: clamp(2rem, 9.7vw, 3rem);
+    line-height: 1.05;
+  }
+
   .detail-panel dl div {
     grid-template-columns: 6rem 1fr;
   }

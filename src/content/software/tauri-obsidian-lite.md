@@ -11,63 +11,70 @@ stack: [Rust 2024, Tauri 2, Vue 3, CodeMirror 6]
 featured: true
 repo: https://github.com/X-Lucifer/Tauri-Obsidian-Lite
 demo:
+seoTitle: Obsidian-Lite Tauri — Rust 本地 Markdown 编辑器 | X.LUCIFER
+seoDescription: Obsidian-Lite Tauri 使用 Rust、Tauri 2 与 Vue 3 构建本地 Markdown 工作台，提供多标签、文件树、实时分栏、目录、Mermaid 和自定义快捷键，并支持 Windows 安装包与文件关联。
+keywords: [Obsidian-Lite Tauri, Rust Markdown 编辑器, Tauri 2, 本地笔记, Markdown 实时预览, Windows 桌面应用]
+languages: [Rust, TypeScript]
+platforms: [Windows]
+appCategory: BusinessApplication
+features: [本地 Markdown 编辑, 多标签与文件树, 源码 / 预览 / 实时分栏, 章节目录与滚动同步, Mermaid 与代码高亮, Windows NSIS 安装]
 ---
 
-## 项目概述
+## Obsidian-Lite Tauri 是什么
 
-Obsidian-Lite / Tauri 是一款面向本地文档的 Markdown 阅读与写作客户端。应用不引入账号体系、云同步服务或专有文档格式，文件直接从本地磁盘读取并保存，适合技术文档、项目说明、长期笔记与代码片段的日常维护。
+Obsidian-Lite Tauri 是基于 Rust、Tauri 2 和 Vue 3 的本地 Markdown 编辑器，面向文档阅读、技术写作和文件夹式笔记管理。前端使用 CodeMirror 6 处理编辑，Rust 命令层承接文件读写、目录扫描、系统字体和设置保存，文档以普通 Markdown 文件保留在本机。
 
-> 本项目为独立软件，与 Obsidian 官方没有隶属关系。
+这是独立项目，不是 Obsidian 官方产品。与 [Wails 版](../wails-obsidian-lite/) 相比，Tauri 版以 Rust 命令和 Tauri 插件实现原生能力，采用独立的桌面构建与安装流程。
 
-## 已实现的产品能力
+## Markdown 工作台功能
 
-### 本地工作区
+### 文件、文件夹与标签
 
-- 新建、打开、编辑并保存 `.md`、`.markdown` 与 `.mdx`
-- 打开文件夹并生成 Markdown 文件树
-- 通过命令行参数或 Windows 文件关联直接载入文档
-- 过滤点目录、`node_modules` 与 `vendor`，目录扫描最大递归 12 层
-- 限制单文件最大 8 MB，避免大文件阻塞桌面交互
+- 支持新建、打开、编辑和保存 `.md`、`.markdown`、`.mdx`，单文件上限为 8 MB。
+- 文件树按目录优先排列，最多递归 12 层，并过滤隐藏目录、`node_modules` 与 `vendor`。
+- 多标签保留打开的文档，重复打开定位已有标签，未保存内容在关闭时提示处理。
+- 关闭文件夹不自动关闭已打开的文档，便于在多个来源之间整理笔记。
+- 支持启动参数传入文档路径，并接入 Windows Markdown 文件关联。
 
-### 多文档与视图
+### 编辑、阅读与实时分栏
 
-- 使用标签页管理多个文档，重复打开时定位到已有标签
-- 跟踪已保存内容与当前内容，明确显示未保存状态
-- 关闭未保存标签前进行确认
-- 提供源码、预览与实时分栏三种模式
-- 支持编辑区和预览区双向滚动同步
-- 提供文件栏、章节目录与 Zen 专注模式
+源码模式适合集中编写，预览模式适合阅读，实时模式同时展示源码和渲染结果。编辑器与预览支持滚动同步，章节目录根据文档标题生成。窄窗口下调整分栏和侧栏布局，Zen 模式可收起文件栏与目录。
 
-### 编辑与渲染
+编辑工具覆盖查找替换、撤销重做、缩进，以及标题、列表、加粗、斜体、链接、行内代码和代码块操作。主要操作可使用自定义快捷键。
 
-- CodeMirror 6 编辑器、行号、当前行高亮、自动换行和查找替换
-- 标题、列表、任务列表、表格、引用、删除线、链接和 Front Matter 处理
-- 围栏代码块动态加载 Highlight.js 语言模块
-- 代码块语言标识、行号与一键复制
-- 自动生成稳定的章节锚点与文档目录
-- 对宽表格和不规则缩进进行规范化处理
-- 文档 HTML 经 DOMPurify 清理，外部链接附加安全属性
+### 预览与图表
 
-## 技术架构
+Markdown 预览支持任务列表、表格、删除线、自动链接、Frontmatter 处理与标题锚点。代码块提供语言标识、行号和复制按钮，语法高亮语言模块按需加载。Mermaid 图表按需渲染，语法错误时显示反馈并保留源码；预览内容经过 DOMPurify 处理。
 
-### Rust 原生层
+## 原生能力与设置
 
-原生侧使用 **Rust 2024 与 Tauri 2**。文件读取、创建、保存、目录扫描、系统字体枚举、设置读写和启动文件解析均通过显式 Tauri Command 暴露；可能阻塞的文件系统操作使用 `spawn_blocking` 执行，避免占用异步运行时线程。
+Rust 后端通过 Tauri 命令接口提供文件操作、文件树扫描、字体枚举和配置读写。可能阻塞的任务交给 `spawn_blocking`，避免在异步执行线程中直接进行长时间文件系统工作。
 
-### Vue 应用层
+应用提供跟随系统、浅色和深色主题，支持系统字体选择、12–24 px 字号、欢迎页开关与快捷键冲突校验。设置存储在本地 `settings.ini`；写入路径包含互斥保护和文件同步操作。
 
-前端采用 **Vue 3、TypeScript 与 Vite**。`useMarkdownWorkspace` 集中管理标签页、当前文档、文件树、视图模式、主题、侧栏、目录、Zen 状态以及操作反馈，原生调用统一收敛在 service 层，避免组件直接依赖 Tauri API。
+## Windows 运行与安装
 
-### 设置与安全
+Windows 版通过 NSIS 安装包交付，采用当前用户安装范围，并提供中英文安装界面、开始菜单、可选桌面快捷方式以及 Markdown 文件关联。
 
-主题、字体、字号、欢迎页和快捷键写入用户配置目录的 `settings.ini`。Rust 层会校验主题范围、12–24 px 字号、快捷键格式与按键冲突。Markdown 渲染允许受控 HTML，但最终结果必须经过 DOMPurify 清理。
+Windows 运行依赖 WebView2。安装配置包含 WebView2 引导安装方式，目标设备缺少运行时时可能需要联网下载。应用通过手动获取新版本更新，没有内置自动更新器。
 
-## Windows 交付
+## 从源码启动
 
-Tauri 配置生成 NSIS 当前用户安装包，支持简体中文和英文、开始菜单、可选桌面快捷方式，以及 `.md`、`.markdown`、`.mdx` 文件关联。前端资源随应用封装，运行时不需要单独部署 Web 服务；目标电脑缺少 WebView2 时，安装器会按配置下载引导程序。
+准备 Rust 工具链、Node.js、pnpm 及 Tauri 所需的 Windows 原生构建环境，然后在仓库根目录执行：
 
-## 当前边界与对照实现
+```bash
+pnpm install
+pnpm tauri dev
+```
 
-当前安装目标面向 Windows，文件夹工作区只展示 Markdown 文档，不承担通用文件管理职责，也不包含同步与多人协作服务。
+生成桌面发行产物：
 
-项目另有 [Go + Wails 2 实现](https://github.com/X-Lucifer/Wails-Obsidian-Lite)。两套客户端保持接近的业务能力和 Vue 交互层，用于比较 Rust/Tauri 与 Go/Wails 在原生桥接、构建产物和安装链路上的差异。
+```bash
+pnpm tauri build
+```
+
+前端使用 Vue 3、TypeScript 和 Vite；桌面侧采用 Rust 2024 Edition、Tauri 2 与 Dialog／Opener 插件。依赖准备、安装器选项及校验命令见 [项目 README](https://github.com/X-Lucifer/Tauri-Obsidian-Lite#readme)。
+
+## 适用范围
+
+Tauri 版适合围绕本地文件工作的 Markdown 阅读与编辑，不提供账号、云同步和团队协作，也不包含 Obsidian 插件生态。`.mdx` 在这里作为文本文档处理，不执行 React／JSX。核心写作可离线使用，远程图片和外部链接仍需要相应网络连接。
