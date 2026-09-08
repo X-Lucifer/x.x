@@ -3,6 +3,14 @@ import { SVGLoader } from 'three/addons/loaders/SVGLoader.js'
 import { MeshSurfaceSampler } from 'three/addons/math/MeshSurfaceSampler.js'
 import { unicornPath } from '../brand/unicorn'
 import { observeTheme } from '../../composables/useTheme'
+import { InertialRotation } from './inertialRotation'
+
+// Supported by Three.js; the accompanying declaration omits this sampler method.
+declare module 'three/addons/math/MeshSurfaceSampler.js' {
+  interface MeshSurfaceSampler {
+    setRandomGenerator(generator: () => number): this
+  }
+}
 
 export interface IdentityScene {
   reset(): void
@@ -40,10 +48,12 @@ export function createIdentityScene(
   let dragId: number | null = null
   let dragX = 0
   let dragY = 0
-  let spinX = 0
-  let spinY = 0
-  let targetSpinX = 0
-  let targetSpinY = 0
+  let dragTime = 0
+  let dragSensitivity = 0.01
+  let pointerSpeed = 0
+  let pointerTime = 0
+  let impulse = 0
+  const rotation = new InertialRotation()
   const pointer = new THREE.Vector2()
   const pointerTarget = new THREE.Vector2()
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -71,7 +81,9 @@ export function createIdentityScene(
     host.removeEventListener('lostpointercapture', pointerUp)
     host.removeEventListener('pointerleave', pointerLeave)
     host.removeEventListener('keydown', keyDown)
+    window.removeEventListener('blur', cancelDrag)
     window.removeEventListener('scroll', invalidateBounds, true)
+    cancelDrag()
     resources.forEach(resource => resource.dispose())
     resources.clear()
     renderer.dispose()
@@ -90,10 +102,12 @@ export function createIdentityScene(
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 40)
   camera.position.set(0, 0.05, 8.2)
   const assembly = new THREE.Group()
+  const presentation = new THREE.Group()
   const emblem = new THREE.Group()
   const orbits = new THREE.Group()
   assembly.add(emblem, orbits)
-  scene.add(assembly)
+  presentation.add(assembly)
+  scene.add(presentation)
 
   const orbitGroups: THREE.Group[] = []
   let hologram: THREE.ShaderMaterial
@@ -114,26 +128,28 @@ export function createIdentityScene(
     const svg = new SVGLoader().parse(`<svg xmlns="http://www.w3.org/2000/svg"><path d="${unicornPath}" /></svg>`)
     const shapes = svg.paths.flatMap(path => path.toShapes())
     const geometry = own(new THREE.ExtrudeGeometry(shapes, {
-      depth: 90, bevelEnabled: false,
-      steps: 1, curveSegments: 8,
+      depth: 140, bevelEnabled: false,
+      steps: 1, curveSegments: 12,
     }))
     geometry.rotateX(Math.PI)
-    geometry.scale(0.00225, 0.00225, 0.00225)
+    geometry.scale(0.0027, 0.0027, 0.0027)
     geometry.center()
     hologram = own(new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true,
       blending: THREE.AdditiveBlending,
-      uniforms: { uTime: { value: 0 }, uOpacity: { value: 1 }, uLightMode: { value: 0 } },
+      uniforms: { uTime: { value: 0 }, uOpacity: { value: 1 }, uLightMode: { value: 0 }, uPointer: { value: pointer }, uHover: { value: 0 }, uAspect: { value: 1 } },
       vertexShader: `
         varying vec3 vPosition;
         varying vec3 vNormal;
         varying vec3 vView;
+        varying vec2 vScreen;
         void main() {
           vPosition = position;
           vec4 mv = modelViewMatrix * vec4(position, 1.0);
           vNormal = normalize(normalMatrix * normal);
           vView = normalize(-mv.xyz);
           gl_Position = projectionMatrix * mv;
+          vScreen = gl_Position.xy / gl_Position.w;
         }
       `,
       fragmentShader: `
@@ -143,13 +159,20 @@ export function createIdentityScene(
         varying vec3 vView;
         uniform float uTime;
         uniform float uOpacity;
+        uniform vec2 uPointer;
+        uniform float uHover;
+        uniform float uAspect;
+        varying vec2 vScreen;
         void main() {
           float fresnel = pow(1.0 - abs(dot(normalize(vNormal), normalize(vView))), 2.0);
           float lines = pow(0.5 + 0.5 * sin(vPosition.y * 160.0), 18.0);
           float scan = exp(-pow((vPosition.y - (1.5 - mod(uTime * 0.3, 3.0))) * 12.0, 2.0));
+          vec2 delta = (vScreen - uPointer) * vec2(uAspect, 1.0);
+          float light = exp(-dot(delta, delta) * 12.0) * uHover;
           vec3 color = mix(vec3(0.13, 0.76, 0.43), vec3(0.55, 1.0, 0.76), scan);
+          color = mix(color, vec3(0.76, 1.0, 0.92), light * 0.65);
           color = mix(color, mix(vec3(0.06, 0.32, 0.21), vec3(0.08, 0.47, 0.31), scan), uLightMode);
-          gl_FragColor = vec4(color, (0.045 + lines * 0.32 + fresnel * 0.5 + scan * 0.5) * uOpacity);
+          gl_FragColor = vec4(color, (0.055 + lines * 0.28 + fresnel * 0.48 + scan * 0.42 + light * 0.2) * uOpacity);
         }
       `,
     }))
@@ -172,7 +195,7 @@ export function createIdentityScene(
     for (let i = 0; i < edgePositions.count; i += 2) {
       edgeStart.fromBufferAttribute(edgePositions, i)
       edgeEnd.fromBufferAttribute(edgePositions, i + 1)
-      const steps = Math.max(1, Math.ceil(edgeStart.distanceTo(edgeEnd) / 0.018))
+      const steps = Math.max(1, Math.ceil(edgeStart.distanceTo(edgeEnd) / 0.014))
       for (let j = 0; j <= steps; j++) {
         edgePoint.lerpVectors(edgeStart, edgeEnd, j / steps)
         glowPositions.push(edgePoint.x, edgePoint.y, edgePoint.z)
@@ -192,9 +215,9 @@ export function createIdentityScene(
         void main() {
           vec4 clip = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
           vec2 delta = (clip.xy / clip.w - uPointer) * vec2(uAspect, 1.0);
-          vGlow = exp(-dot(delta, delta) * 22.0) * uHover;
+          vGlow = exp(-dot(delta, delta) * 14.0) * uHover;
           gl_Position = clip;
-          gl_PointSize = (2.0 + vGlow * 24.0) * uDpr;
+          gl_PointSize = (2.0 + vGlow * 19.0) * uDpr;
         }
       `,
       fragmentShader: `
@@ -205,7 +228,7 @@ export function createIdentityScene(
           float halo = exp(-dot(p, p) * 18.0);
           vec3 color = mix(vec3(0.14, 0.8, 0.42), vec3(0.67, 1.0, 0.82), halo * vGlow);
           color = mix(color, vec3(0.08, 0.51, 0.31), uLightMode);
-          gl_FragColor = vec4(color, halo * vGlow * 0.16);
+          gl_FragColor = vec4(color, halo * vGlow * 0.2);
         }
       `,
     }))
@@ -214,8 +237,8 @@ export function createIdentityScene(
     emblem.add(edgeGlow)
 
     const sample = new THREE.Vector3()
-    const sampler = new MeshSurfaceSampler(sculpture).build()
-    const count = compact.matches ? 3200 : 5600
+    const sampler = new MeshSurfaceSampler(sculpture).setRandomGenerator(random).build()
+    const count = compact.matches ? 14000 : 24000
     const positions = new Float32Array(count * 3)
     const dispersions = new Float32Array(count * 3)
     const seeds = new Float32Array(count)
@@ -233,7 +256,7 @@ export function createIdentityScene(
     particleGeometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 1))
     const particleMaterial = own(new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-      uniforms: { uTime: { value: 0 }, uMorph: { value: 0 }, uDpr: { value: 1 }, uPointer: { value: new THREE.Vector2(10, 10) }, uLightMode: { value: 0 } },
+      uniforms: { uTime: { value: 0 }, uMorph: { value: 0 }, uDpr: { value: 1 }, uPointer: { value: pointer }, uLightMode: { value: 0 }, uAspect: { value: 1 }, uHover: { value: 0 }, uSpeed: { value: 0 }, uImpulse: { value: 0 } },
       vertexShader: `
         attribute vec3 aScatter;
         attribute float aSeed;
@@ -241,33 +264,43 @@ export function createIdentityScene(
         uniform float uMorph;
         uniform float uDpr;
         uniform vec2 uPointer;
+        uniform float uAspect;
+        uniform float uHover;
+        uniform float uSpeed;
+        uniform float uImpulse;
         varying float vSeed;
         varying float vAlpha;
+        varying float vLight;
         void main() {
           vSeed = aSeed;
           float scatter = sin(uMorph * 3.14159265);
-          vec3 p = position + aScatter * scatter * 1.35;
-          p.z += sin(p.y * 5.0 + uTime * 0.7 + aSeed * 4.0) * 0.045 * uMorph;
-          vec2 away = p.xy - uPointer;
-          float proximity = 1.0 - smoothstep(0.0, 0.7, length(away));
-          p.xy += normalize(away + 0.0001) * proximity * 0.04 * uMorph;
-          p.z += proximity * 0.05 * uMorph;
+          vec3 p = position + aScatter * scatter * 0.58;
+          p.z += sin(p.y * 5.0 + uTime * 0.7 + aSeed * 4.0) * 0.024 * uMorph;
           vec4 mv = modelViewMatrix * vec4(p, 1.0);
+          vec4 clip = projectionMatrix * mv;
+          vec2 away = (clip.xy / clip.w - uPointer) * vec2(uAspect, 1.0);
+          float proximity = exp(-dot(away, away) * 15.0) * uHover;
+          // View-space interaction remains under the cursor after any 3D rotation.
+          mv.xy += normalize(away + 0.0001) * proximity * (0.035 + uSpeed * 0.08 + uImpulse * 0.09) * uMorph;
+          mv.z += proximity * 0.08 * uMorph;
           gl_Position = projectionMatrix * mv;
-          gl_PointSize = (1.3 + aSeed * 1.7) * uDpr * (6.0 / -mv.z);
-          vAlpha = uMorph;
+          float sweep = exp(-pow((position.y - (1.6 - mod(uTime * 0.32, 3.2))) * 8.0, 2.0));
+          vLight = proximity * 0.85 + sweep * 0.5;
+          gl_PointSize = (1.5 + aSeed * 1.1 + vLight * 0.9) * uDpr * (6.5 / -mv.z);
+          vAlpha = (0.16 + uMorph * 0.84) * (0.6 + aSeed * 0.4);
         }
       `,
       fragmentShader: `
         uniform float uLightMode;
         varying float vSeed;
         varying float vAlpha;
+        varying float vLight;
         void main() {
           float r = length(gl_PointCoord - 0.5);
-          float a = 1.0 - smoothstep(0.12, 0.5, r);
-          vec3 color = mix(vec3(0.24, 0.64, 0.43), vec3(0.86, 1.0, 0.92), vSeed);
+          float a = exp(-r * r * 12.0) * (1.0 - smoothstep(0.4, 0.5, r));
+          vec3 color = mix(vec3(0.2, 0.7, 0.48), vec3(0.72, 1.0, 0.88), vSeed * 0.75 + vLight * 0.25);
           color = mix(color, mix(vec3(0.08, 0.26, 0.16), vec3(0.18, 0.48, 0.33), vSeed), uLightMode);
-          gl_FragColor = vec4(color, a * vAlpha * 0.85);
+          gl_FragColor = vec4(color, a * vAlpha * (0.9 + vLight * 0.1));
         }
       `,
     }))
@@ -381,6 +414,7 @@ export function createIdentityScene(
     host.addEventListener('lostpointercapture', pointerUp)
     host.addEventListener('pointerleave', pointerLeave)
     host.addEventListener('keydown', keyDown)
+    window.addEventListener('blur', cancelDrag)
     window.addEventListener('scroll', invalidateBounds, { passive: true, capture: true })
     motion.addEventListener('change', syncMotion)
     document.addEventListener('visibilitychange', syncMotion)
@@ -420,7 +454,7 @@ export function createIdentityScene(
     pointerBounds = host.getBoundingClientRect()
     const { width, height } = pointerBounds
     if (!width || !height) return
-    const dpr = Math.min(window.devicePixelRatio || 1, compact.matches ? 1 : 1.5, Math.sqrt(800_000 / (width * height)))
+    const dpr = Math.min(window.devicePixelRatio || 1, compact.matches ? 1.5 : 2, Math.sqrt(1_200_000 / (width * height)))
     const nextWidth = Math.max(1, Math.floor(width * dpr))
     const nextHeight = Math.max(1, Math.floor(height * dpr))
     if (renderWidth === nextWidth && renderHeight === nextHeight) return
@@ -430,7 +464,10 @@ export function createIdentityScene(
     camera.aspect = width / height
     camera.position.z = camera.aspect < 1 ? 8.2 / camera.aspect : 8.2
     camera.updateProjectionMatrix()
+    dragSensitivity = Math.PI * 2 / Math.max(360, Math.min(width, height) * 1.35)
+    hologram.uniforms.uAspect!.value = camera.aspect
     particles.material.uniforms.uDpr!.value = dpr
+    particles.material.uniforms.uAspect!.value = camera.aspect
     edgeGlow.material.uniforms.uDpr!.value = dpr
     edgeGlow.material.uniforms.uAspect!.value = camera.aspect
     dust.material.uniforms.uDpr!.value = dpr
@@ -439,17 +476,19 @@ export function createIdentityScene(
 
   function draw(delta: number) {
     const ease = motion.matches ? 1 : 1 - Math.exp(-delta * 18)
-    const rotationEase = dragId !== null ? 1 - Math.exp(-delta * 32) : ease
     // 4 s hologram → 5 s linear blend → 4 s points → 5 s linear return.
     const cycle = motion.matches ? 0 : time % 18
     const morph = cycle < 4 ? 0 : cycle < 9 ? (cycle - 4) / 5 : cycle < 13 ? 1 : 1 - (cycle - 13) / 5
     hover = THREE.MathUtils.lerp(hover, hoverTarget, ease)
     pointer.lerp(pointerTarget, ease)
-    spinX = THREE.MathUtils.lerp(spinX, targetSpinX, rotationEase)
-    spinY = THREE.MathUtils.lerp(spinY, targetSpinY, rotationEase)
-    assembly.rotation.set(spinX + pointer.y * 0.065, spinY + pointer.x * 0.11, 0)
-    emblem.rotation.set(0.04, -0.22 + Math.sin(time * 0.24) * 0.09, -0.045)
-    emblem.position.y = Math.sin(time * 0.55) * 0.045
+    rotation.update(delta, dragId !== null, motion.matches)
+    assembly.quaternion.copy(rotation.orientation)
+    // Parallax translates the presentation; it never fights the rotation under a grab.
+    presentation.position.set(pointer.x * 0.045, pointer.y * 0.035, 0)
+    emblem.rotation.set(0.04, -0.22, -0.045)
+    emblem.position.y = Math.sin(time * 0.55) * 0.025 * (1 - hover)
+    pointerSpeed *= Math.exp(-delta * 7)
+    impulse *= Math.exp(-delta * 5)
     orbitGroups.forEach((group, index) => {
       group.rotation.z = (index === 0 ? -0.36 : index === 1 ? 0.58 : -0.3) + time * (index % 2 ? -0.065 : 0.045)
     })
@@ -459,13 +498,16 @@ export function createIdentityScene(
     edgeGlow.visible = hover > 0.001
     hologram.uniforms.uOpacity!.value = 1 - morph
     hologram.uniforms.uTime!.value = time
-    outline.material.opacity = (1 - morph) * 0.82
+    hologram.uniforms.uHover!.value = hover
+    outline.material.opacity = (1 - morph) * 0.72
     edgeGlow.material.uniforms.uPointer!.value.copy(pointer)
     edgeGlow.material.uniforms.uHover!.value = hover
-    particles.visible = morph > 0.002
+    particles.visible = true
     particles.material.uniforms.uMorph!.value = morph
     particles.material.uniforms.uTime!.value = time
-    particles.material.uniforms.uPointer!.value.set(pointer.x * 2.6, pointer.y * 2.5)
+    particles.material.uniforms.uHover!.value = hover
+    particles.material.uniforms.uSpeed!.value = pointerSpeed
+    particles.material.uniforms.uImpulse!.value = impulse
     dust.material.uniforms.uTime!.value = time
     scan.material.uniforms.uTime!.value = time
     scan.material.uniforms.uEnabled!.value = motion.matches ? 0 : 1
@@ -482,7 +524,7 @@ export function createIdentityScene(
     draw(delta)
     const settling = Math.abs(hover - hoverTarget) > 0.001
       || pointer.distanceToSquared(pointerTarget) > 0.00001
-      || Math.abs(spinX - targetSpinX) + Math.abs(spinY - targetSpinY) > 0.001
+      || rotation.moving
     if (!motion.matches || settling) frame = requestAnimationFrame(animate)
   }
 
@@ -498,46 +540,71 @@ export function createIdentityScene(
     if (motion.matches) {
       pointerTarget.set(0, 0)
       hoverTarget = 0
-      spinX = targetSpinX
-      spinY = targetSpinY
+      pointerSpeed = impulse = 0
+      rotation.velocity.set(0, 0)
     }
+    if (document.hidden || !visible) cancelDrag()
     requestDraw()
   }
 
   function pointerMove(event: PointerEvent) {
-    if (motion.matches) return
+    if (dragId !== null && dragId !== event.pointerId) return
     if (dragId === event.pointerId) {
-      targetSpinY += (event.clientX - dragX) * 0.007
-      targetSpinX = THREE.MathUtils.clamp(targetSpinX + (event.clientY - dragY) * 0.004, -0.5, 0.5)
+      rotation.drag(event.clientX - dragX, event.clientY - dragY, (event.timeStamp - dragTime) / 1000, dragSensitivity)
       dragX = event.clientX
       dragY = event.clientY
+      dragTime = event.timeStamp
     }
-    if (event.pointerType !== 'touch') {
-      if (!hoverTarget) invalidateBounds()
-      hoverTarget = 1
+    if (!motion.matches && (event.pointerType !== 'touch' || dragId !== null)) {
       const rect = pointerBounds ??= host.getBoundingClientRect()
-      pointerTarget.set((event.clientX - rect.left) / rect.width * 2 - 1, 1 - (event.clientY - rect.top) / rect.height * 2)
+      const x = (event.clientX - rect.left) / rect.width * 2 - 1
+      const y = 1 - (event.clientY - rect.top) / rect.height * 2
+      const elapsed = Math.max(0.008, (event.timeStamp - pointerTime) / 1000)
+      if (hoverTarget) pointerSpeed = Math.min(1, Math.hypot(x - pointerTarget.x, y - pointerTarget.y) / elapsed * 0.12)
+      hoverTarget = 1
+      pointerTarget.set(x, y)
+      pointerTime = event.timeStamp
     }
     requestDraw()
   }
 
   function pointerDown(event: PointerEvent) {
-    if (event.button !== 0 || motion.matches || dragId !== null) return
+    if (event.button !== 0 || !event.isPrimary || dragId !== null) return
     dragId = event.pointerId
     dragX = event.clientX
     dragY = event.clientY
+    dragTime = event.timeStamp
+    rotation.grab()
+    invalidateBounds()
     host.setPointerCapture(event.pointerId)
     host.dataset.dragging = 'true'
+    host.focus({ preventScroll: true })
+    impulse = motion.matches ? 0 : 1
+    pointerMove(event)
   }
 
   function pointerUp(event: PointerEvent) {
     if (dragId !== event.pointerId) return
+    rotation.release((event.timeStamp - dragTime) / 1000, motion.matches || event.type !== 'pointerup')
     dragId = null
     delete host.dataset.dragging
     if (host.hasPointerCapture(event.pointerId)) host.releasePointerCapture(event.pointerId)
+    const rect = pointerBounds ??= host.getBoundingClientRect()
+    if (event.pointerType === 'touch' || event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) pointerLeave()
+    requestDraw()
+  }
+
+  function cancelDrag() {
+    const id = dragId
+    dragId = null
+    rotation.grab()
+    delete host.dataset.dragging
+    if (id !== null && host.hasPointerCapture(id)) host.releasePointerCapture(id)
+    pointerLeave()
   }
 
   function pointerLeave() {
+    if (dragId !== null) return
     invalidateBounds()
     pointerTarget.set(0, 0)
     hoverTarget = 0
@@ -551,21 +618,19 @@ export function createIdentityScene(
   function keyDown(event: KeyboardEvent) {
     if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home'].includes(event.key)) return
     event.preventDefault()
-    if (event.key === 'ArrowLeft') targetSpinY -= 0.25
-    if (event.key === 'ArrowRight') targetSpinY += 0.25
-    if (event.key === 'ArrowUp') targetSpinX = Math.max(-0.5, targetSpinX - 0.12)
-    if (event.key === 'ArrowDown') targetSpinX = Math.min(0.5, targetSpinX + 0.12)
-    if (event.key === 'Home') targetSpinX = targetSpinY = 0
+    if (event.key === 'ArrowLeft') rotation.nudge(0, -0.25)
+    if (event.key === 'ArrowRight') rotation.nudge(0, 0.25)
+    if (event.key === 'ArrowUp') rotation.nudge(-0.25, 0)
+    if (event.key === 'ArrowDown') rotation.nudge(0.25, 0)
+    if (event.key === 'Home') reset()
     requestDraw()
   }
 
-  return {
-    reset() {
-      targetSpinX = targetSpinY = 0
-      pointerTarget.set(0, 0)
-      hoverTarget = 0
-      requestDraw()
-    },
-    dispose,
+  function reset() {
+    cancelDrag()
+    rotation.reset(motion.matches)
+    requestDraw()
   }
+
+  return { reset, dispose }
 }

@@ -35,6 +35,7 @@
   --font-mono: 'JetBrains Mono Variable', Consolas, monospace;
   --container: 76rem;
   --container-padding: clamp(1.15rem, 4vw, 2.5rem);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
   color-scheme: dark;
   color: var(--text-muted);
@@ -196,7 +197,9 @@ button:focus-visible {
     background-color 180ms ease,
     border-color 180ms ease,
     box-shadow 180ms ease,
-    transform 180ms ease;
+    transform 180ms ease,
+    translate 220ms var(--ease-out),
+    scale 180ms var(--ease-out);
 }
 
 [data-spatial] {
@@ -210,10 +213,18 @@ button:focus-visible {
 .software-grid { perspective: 1400px; }
 .software-card .card-copy { transform: translateZ(24px); }
 .software-card .card-topline, .software-card .card-stack { transform: translateZ(12px); }
-.technology-matrix [data-spatial-active], .principle-list [data-spatial-active], .capability-list [data-spatial-active] {
-  background: linear-gradient(90deg, rgb(var(--accent-rgb) / 5%), transparent);
-  border-bottom-color: rgb(var(--accent-rgb) / 40%);
+.technology-matrix [data-spatial-hover], .principle-list [data-spatial-hover], .capability-list [data-spatial-hover] {
+  background: linear-gradient(90deg, rgb(var(--accent-rgb) / 8%), transparent);
+  border-bottom-color: rgb(var(--accent-rgb) / 50%);
 }
+
+.button > svg { transition: transform 350ms var(--ease-out); }
+.button:hover > svg, .button:focus-visible > svg { transform: translate(3px, -2px); }
+.text-link { position: relative; transition: color 220ms ease; }
+.text-link::after { position: absolute; bottom: -0.35rem; left: 0; right: 0; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform 350ms var(--ease-out); content: ''; }
+.text-link:hover::after, .text-link:focus-visible::after { transform: scaleX(1); }
+.text-link svg { transition: transform 350ms var(--ease-out); }
+.text-link:hover svg, .text-link:focus-visible svg { transform: translateX(4px); }
 
 .button::before {
   position: absolute;
@@ -339,4 +350,5 @@ button:focus-visible {
 
   [data-spatial], .software-card .card-copy, .software-card .card-topline, .software-card .card-stack { transform: none; }
   .button:hover, .button:active { translate: none; scale: none; }
+  .software-card:active, .theme-toggle:active svg { scale: none; }
 }

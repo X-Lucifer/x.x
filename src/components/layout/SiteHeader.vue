@@ -48,14 +48,12 @@ watch(
           v-for="item in navigation"
           :key="item.to"
           class="nav-link"
-          data-spatial="subtle"
           :to="item.to"
         >
-          {{ item.label }}
+          <span data-spatial="magnetic">{{ item.label }}</span>
         </AppLink>
         <a
           class="contact-link"
-          data-spatial="subtle"
           :href="siteConfig.github"
           target="_blank"
           rel="noreferrer"
@@ -67,6 +65,7 @@ watch(
       <div class="header-actions">
         <button
           class="theme-toggle"
+          data-spatial="magnetic"
           type="button"
           role="switch"
           aria-label="亮色主题"
@@ -183,17 +182,22 @@ watch(
   background: var(--accent);
   content: '';
   transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 180ms ease;
+  transform-origin: center;
+  transition: transform 350ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.nav-link > span { display: grid; place-items: center; min-height: 2.75rem; padding: 0.45rem; }
+
 .nav-link:hover,
+.nav-link:focus-visible,
 .nav-link.router-link-active {
-  background: rgb(var(--accent-rgb) / 5%);
+  background: rgb(var(--accent-rgb) / 7%);
   color: var(--text-strong);
 }
 
-.nav-link.router-link-active::after {
+.nav-link.router-link-active::after,
+.nav-link:hover::after,
+.nav-link:focus-visible::after {
   transform: scaleX(1);
 }
 
@@ -208,6 +212,8 @@ watch(
 .contact-link:hover {
   background: var(--accent);
 }
+.contact-link svg { transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1); }
+.contact-link:hover svg, .contact-link:focus-visible svg { transform: translate(3px, -3px); }
 
 .menu-toggle {
   display: none;
@@ -220,31 +226,33 @@ watch(
   grid-template-columns: 1fr 1fr;
   align-items: center;
   justify-items: center;
-  width: 4.65rem;
-  height: 2.6rem;
-  padding: 4px;
-  border: 1px solid var(--line-strong);
-  border-radius: 0.3rem;
-  background: var(--surface-2);
+  width: 4.875rem;
+  height: 2.75rem;
+  padding: 5px;
+  border: 0;
+  border-radius: 2rem;
+  background: transparent;
   color: var(--text-dim);
   cursor: pointer;
 }
 .theme-toggle-thumb {
   position: absolute;
-  inset: 4px auto 4px 4px;
-  width: calc((100% - 8px) / 2);
-  border-radius: 0.14rem;
-  background: var(--surface-1);
-  box-shadow: 0 1px 4px rgb(var(--shadow-rgb) / 12%);
+  inset: 5px auto 5px 5px;
+  width: calc((100% - 10px) / 2);
+  border-radius: 50%;
+  background: rgb(var(--accent-rgb) / 9%);
   transform: translateX(100%);
-  transition: transform 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1), background 250ms ease;
 }
-.theme-toggle svg { position: relative; }
+.theme-toggle svg { position: relative; transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1), color 250ms; }
 .theme-moon { color: var(--accent); }
 :global([data-theme='light'] .theme-toggle-thumb) { transform: translateX(0); }
 :global([data-theme='light'] .theme-sun) { color: var(--accent); }
 :global([data-theme='light'] .theme-moon) { color: var(--text-dim); }
-.theme-toggle:hover { border-color: var(--accent); }
+.theme-toggle:hover .theme-toggle-thumb { background: rgb(var(--accent-rgb) / 15%); }
+.theme-toggle:hover .theme-sun { transform: rotate(60deg); }
+.theme-toggle:hover .theme-moon { transform: rotate(-15deg); }
+.theme-toggle:active svg { scale: 0.88; }
 
 @media (max-width: 760px) {
   .header-inner {
@@ -310,7 +318,7 @@ watch(
     transform: scaleY(0);
   }
 
-  .nav-link.router-link-active::after {
+  .nav-link.router-link-active::after, .nav-link:hover::after, .nav-link:focus-visible::after {
     transform: scaleY(1);
   }
 }

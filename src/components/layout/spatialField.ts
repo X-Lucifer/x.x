@@ -16,6 +16,54 @@ export function createSpatialField(host: HTMLElement) {
   let scrollDepth = 0
   let targetX = 0
   let targetY = 0
+  let presence = 0
+  let speed = 0
+  let pointerTime = 0
+  let lastTrail = -1
+  let trailIndex = 0
+  let rippleIndex = 0
+  const trails = Array.from({ length: 7 }, () => new THREE.Vector4(0, 0, -10, 0))
+  const ripples = Array.from({ length: 3 }, () => new THREE.Vector4(0, 0, -10, 0))
+  const interaction = {
+    uTime: { value: 0 },
+    uPointer: { value: new THREE.Vector2() },
+    uAspect: { value: 1 },
+    uPresence: { value: 0 },
+    uSpeed: { value: 0 },
+    uTrails: { value: trails },
+    uRipples: { value: ripples },
+    uLightMode: { value: 0 },
+  }
+  const fieldShader = `
+    uniform float uTime;
+    uniform vec2 uPointer;
+    uniform float uAspect;
+    uniform float uPresence;
+    uniform float uSpeed;
+    uniform vec4 uTrails[7];
+    uniform vec4 uRipples[3];
+    vec2 fieldAt(vec2 screen) {
+      vec2 delta = (screen - uPointer) * vec2(uAspect, 1.0);
+      float light = exp(-dot(delta, delta) * 20.0) * uPresence;
+      float wave = 0.0;
+      for (int i = 0; i < 7; i++) {
+        float age = max(0.0, uTime - uTrails[i].z);
+        if (uTrails[i].w > 0.0 && age < 1.7) {
+          vec2 offset = (screen - uTrails[i].xy) * vec2(uAspect, 1.0);
+          light += exp(-dot(offset, offset) * 65.0 - age * 3.8) * uTrails[i].w * 0.36;
+        }
+      }
+      for (int i = 0; i < 3; i++) {
+        float age = max(0.0, uTime - uRipples[i].z);
+        if (uRipples[i].w > 0.0 && age < 3.5) {
+          float distance = length((screen - uRipples[i].xy) * vec2(uAspect, 1.0));
+          float radius = age * 0.8;
+          wave += exp(-pow((distance - radius) * 24.0, 2.0) - age * 1.8) * uRipples[i].w;
+        }
+      }
+      return vec2(min(light, 1.65), wave);
+    }
+  `
   const motion = matchMedia('(prefers-reduced-motion: reduce)')
   const resources: { dispose(): void }[] = []
   const own = <T extends { dispose(): void }>(resource: T): T => { resources.push(resource); return resource }
@@ -27,21 +75,25 @@ export function createSpatialField(host: HTMLElement) {
   let renderWidth = 0
   let renderHeight = 0
   let floatingMaterial: THREE.ShaderMaterial
+  let matrixGeometry: THREE.BufferGeometry | undefined
+  const matrixScale = { value: 1 }
   const gridMaterial = own(new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    uniforms: { uTime: { value: 0 }, uScroll: { value: 0 }, uPointer: { value: new THREE.Vector2() }, uLightMode: { value: 0 } },
+    uniforms: { ...interaction, uScroll: { value: 0 } },
     vertexShader: `
-      uniform float uTime;
+      ${fieldShader}
       uniform float uScroll;
-      uniform vec2 uPointer;
       varying float vDepth;
       varying float vHeight;
+      varying float vLight;
       void main() {
         vec3 p = position;
         p.z += uScroll;
-        float d = distance(p.xz, vec2(uPointer.x * 10.0, uPointer.y * 5.0));
         p.y += sin(p.x * 0.4 + p.z * 0.22 + uTime * 0.22) * 0.28;
-        p.y += exp(-d * 0.32) * 0.6;
+        vec4 base = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+        vec2 field = fieldAt(base.xy / max(base.w, 0.1));
+        p.y += field.x * (0.28 + uSpeed * 0.18) + field.y * 0.3;
+        vLight = field.x * 0.6 + field.y;
         vHeight = p.y;
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         vDepth = -mv.z;
@@ -52,10 +104,12 @@ export function createSpatialField(host: HTMLElement) {
       uniform float uLightMode;
       varying float vDepth;
       varying float vHeight;
+      varying float vLight;
       void main() {
         float fade = (1.0 - smoothstep(8.0, 35.0, vDepth)) * smoothstep(1.0, 5.0, vDepth);
         vec3 color = mix(vec3(0.18, 0.71, 0.4), vec3(0.19, 0.35, 0.25), uLightMode);
-        gl_FragColor = vec4(color, fade * (0.15 + (vHeight + 2.0) * 0.12) * mix(1.0, 0.6, uLightMode));
+        color = mix(color, mix(vec3(0.52, 1.0, 0.77), vec3(0.12, 0.42, 0.29), uLightMode), min(vLight, 1.0));
+        gl_FragColor = vec4(color, fade * (0.14 + (vHeight + 2.0) * 0.1 + vLight * 0.42) * mix(1.0, 0.65, uLightMode));
       }
     `,
   }))
@@ -67,6 +121,11 @@ export function createSpatialField(host: HTMLElement) {
     resizeObserver?.disconnect()
     stopTheme?.()
     document.removeEventListener('pointermove', pointerMove)
+    document.removeEventListener('pointerdown', pointerDown)
+    document.removeEventListener('pointerleave', pointerLeave)
+    document.removeEventListener('pointerup', pointerUp)
+    document.removeEventListener('pointercancel', pointerUp)
+    window.removeEventListener('blur', pointerLeave)
     document.removeEventListener('visibilitychange', sync)
     motion.removeEventListener('change', sync)
     canvas.removeEventListener('webglcontextlost', contextLost)
@@ -79,14 +138,53 @@ export function createSpatialField(host: HTMLElement) {
   try {
     const grid: number[] = []
     for (let x = -22; x <= 22; x++) {
-      for (let z = -36; z < 9; z++) grid.push(x, -2.1, z, x, -2.1, z + 1)
+      for (let z = -36; z < 9; z += 0.5) grid.push(x, -2.1, z, x, -2.1, z + 0.5)
     }
     for (let z = -36; z <= 9; z++) {
-      for (let x = -22; x < 22; x++) grid.push(x, -2.1, z, x + 1, -2.1, z)
+      for (let x = -22; x < 22; x += 0.5) grid.push(x, -2.1, z, x + 0.5, -2.1, z)
     }
     const gridGeometry = own(new THREE.BufferGeometry())
     gridGeometry.setAttribute('position', new THREE.Float32BufferAttribute(grid, 3))
     world.add(new THREE.LineSegments(gridGeometry, gridMaterial))
+
+    matrixGeometry = own(new THREE.BufferGeometry())
+    matrixGeometry.setAttribute('position', new THREE.Float32BufferAttribute([], 3))
+    const matrixMaterial = own(new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
+      uniforms: { ...interaction, uScale: matrixScale },
+      vertexShader: `
+        ${fieldShader}
+        uniform float uScale;
+        varying float vLight;
+        varying float vAlpha;
+        void main() {
+          vec2 p = position.xy;
+          vec2 field = fieldAt(p);
+          vec2 offset = (p - uPointer) * vec2(uAspect, 1.0);
+          p += normalize(offset + 0.0001) / vec2(uAspect, 1.0) * field.x * (0.012 + uSpeed * 0.012);
+          vLight = min(1.0, field.x * 0.8 + field.y);
+          float breathe = 0.5 + 0.5 * sin(position.x * 12.0 + position.y * 7.0 + uTime * 0.3);
+          vAlpha = 0.028 + breathe * 0.02 + vLight * 0.7;
+          gl_Position = vec4(p, 0.99, 1.0);
+          gl_PointSize = (1.3 + vLight * 3.1) * uScale;
+        }
+      `,
+      fragmentShader: `
+        uniform float uLightMode;
+        varying float vLight;
+        varying float vAlpha;
+        void main() {
+          float d = length(gl_PointCoord - 0.5);
+          float point = 1.0 - smoothstep(0.12, 0.5, d);
+          vec3 color = mix(vec3(0.2, 0.6, 0.4), vec3(0.64, 1.0, 0.83), vLight);
+          color = mix(color, vec3(0.12, 0.38, 0.25), uLightMode);
+          gl_FragColor = vec4(color, point * vAlpha * mix(1.0, 0.65, uLightMode));
+        }
+      `,
+    }))
+    const matrix = new THREE.Points(matrixGeometry, matrixMaterial)
+    matrix.frustumCulled = false
+    scene.add(matrix)
 
     const wireMaterial = own(new THREE.LineBasicMaterial({ color: 0x50c889, transparent: true, opacity: 0.16 }))
     const box = own(new THREE.BoxGeometry(1, 1, 1))
@@ -167,6 +265,7 @@ export function createSpatialField(host: HTMLElement) {
       const light = theme === 'light'
       gridMaterial.uniforms.uLightMode!.value = light ? 1 : 0
       gridMaterial.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending
+      matrixMaterial.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending
       wireMaterial.color.set(light ? 0x42634e : 0x50c889)
       wireMaterial.opacity = light ? 0.2 : 0.16
       floatingMaterial.uniforms.uOpacity!.value = wireMaterial.opacity
@@ -176,6 +275,11 @@ export function createSpatialField(host: HTMLElement) {
 
     host.append(canvas)
     document.addEventListener('pointermove', pointerMove, { passive: true })
+    document.addEventListener('pointerdown', pointerDown, { passive: true })
+    document.addEventListener('pointerleave', pointerLeave)
+    document.addEventListener('pointerup', pointerUp, { passive: true })
+    document.addEventListener('pointercancel', pointerUp, { passive: true })
+    window.addEventListener('blur', pointerLeave)
     document.addEventListener('visibilitychange', sync)
     motion.addEventListener('change', sync)
     canvas.addEventListener('webglcontextlost', contextLost)
@@ -199,6 +303,9 @@ export function createSpatialField(host: HTMLElement) {
     const gridPointer = gridMaterial.uniforms.uPointer!.value as THREE.Vector2
     gridPointer.x = THREE.MathUtils.lerp(gridPointer.x, targetX, amount)
     gridPointer.y = THREE.MathUtils.lerp(gridPointer.y, targetY, amount)
+    interaction.uPresence.value = THREE.MathUtils.lerp(interaction.uPresence.value, presence, amount)
+    speed *= Math.exp(-delta * 5)
+    interaction.uSpeed.value = THREE.MathUtils.lerp(interaction.uSpeed.value, speed, amount)
     floatingMaterial.uniforms.uScroll!.value = scrollDepth
     renderer.render(scene, camera)
   }
@@ -228,20 +335,63 @@ export function createSpatialField(host: HTMLElement) {
     renderer.setSize(renderWidth, renderHeight, false)
     camera.aspect = width / height
     camera.updateProjectionMatrix()
+    interaction.uAspect.value = camera.aspect
+    matrixScale.value = scale
+    const matrixPoints: number[] = []
+    const spacing = matchMedia('(pointer: coarse)').matches ? 40 : 28
+    for (let y = spacing / 2; y < height; y += spacing) {
+      for (let x = spacing / 2; x < width; x += spacing) matrixPoints.push(x / width * 2 - 1, 1 - y / height * 2, 0)
+    }
+    matrixGeometry?.setAttribute('position', new THREE.Float32BufferAttribute(matrixPoints, 3))
     render(1)
   }
 
   function pointerMove(event: PointerEvent) {
     if (motion.matches || event.pointerType === 'touch') return
+    const x = event.clientX / innerWidth * 2 - 1
+    const y = 1 - event.clientY / innerHeight * 2
+    const elapsed = Math.max(0.008, (event.timeStamp - pointerTime) / 1000)
+    if (presence) speed = Math.min(1, Math.hypot(x - targetX, y - targetY) / elapsed * 0.12)
+    targetX = x
+    targetY = y
+    presence = 1
+    pointerTime = event.timeStamp
+    if (time - lastTrail > 0.035) {
+      trails[trailIndex]!.set(x, y, time, 0.4 + speed * 0.6)
+      trailIndex = (trailIndex + 1) % trails.length
+      lastTrail = time
+    }
+  }
+
+  function pointerDown(event: PointerEvent) {
+    if (motion.matches || event.button !== 0 || !event.isPrimary) return
     targetX = event.clientX / innerWidth * 2 - 1
     targetY = 1 - event.clientY / innerHeight * 2
+    presence = 1
+    ripples[rippleIndex]!.set(targetX, targetY, time, 1)
+    rippleIndex = (rippleIndex + 1) % ripples.length
+  }
+
+  function pointerLeave() {
+    presence = speed = 0
+    targetX = targetY = 0
+  }
+
+  function pointerUp(event: PointerEvent) {
+    if (event.pointerType === 'touch') pointerLeave()
   }
 
   function sync() {
     cancelAnimationFrame(frame)
     frame = 0
     if (disposed || document.hidden) return
-    if (motion.matches) { targetX = 0; targetY = 0; render(1) }
+    if (motion.matches) {
+      pointerLeave()
+      interaction.uPresence.value = interaction.uSpeed.value = 0
+      trails.forEach(trail => trail.w = 0)
+      ripples.forEach(ripple => ripple.w = 0)
+      render(1)
+    }
     if (!motion.matches) { previous = performance.now(); frame = requestAnimationFrame(animate) }
   }
 

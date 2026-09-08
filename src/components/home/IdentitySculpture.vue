@@ -63,7 +63,7 @@ onUnmounted(() => {
         :tabindex="status === 'ready' ? 0 : undefined"
         role="group"
         aria-label="交互式独角兽雕塑"
-        aria-description="方向键旋转，Home 键复位。鼠标移动可照亮附近的轮廓。"
+        aria-description="鼠标或单指拖拽可沿任意方向连续旋转，松手后惯性减速。方向键旋转，Home 键复位。鼠标移动可照亮附近的轮廓。"
       />
       <div v-if="status !== 'ready'" class="scene-fallback" aria-hidden="true">
         <div class="fallback-orbit" />
@@ -96,9 +96,14 @@ onUnmounted(() => {
   position: relative;
   min-width: 0;
   border: 1px solid var(--line-strong);
-  border-radius: 0.15rem;
+  border-radius: 0.55rem;
   background: var(--panel-bg);
-  box-shadow: 12px 12px 0 -1px var(--panel-back), 12px 12px 0 0 rgb(var(--accent-rgb) / 14%), 0 30px 70px -35px rgb(var(--shadow-rgb) / var(--panel-shadow-alpha));
+  box-shadow: 0 1px 0 rgb(var(--ink-rgb) / 6%) inset, 0 28px 80px -28px rgb(var(--shadow-rgb) / var(--panel-shadow-alpha)), 0 0 60px -20px rgb(var(--accent-rgb) / 9%);
+  transition: border-color 350ms ease, box-shadow 350ms ease;
+}
+.identity-panel:hover, .identity-panel:focus-within {
+  border-color: rgb(var(--accent-rgb) / 38%);
+  box-shadow: 0 1px 0 rgb(var(--ink-rgb) / 8%) inset, 0 32px 90px -28px rgb(var(--shadow-rgb) / var(--panel-shadow-alpha)), 0 0 70px -20px rgb(var(--accent-rgb) / 17%);
 }
 .panel-caption {
   display: flex;
@@ -121,8 +126,7 @@ onUnmounted(() => {
   height: clamp(22rem, 32vw, 29rem);
   overflow: hidden;
   background:
-    linear-gradient(rgb(var(--accent-rgb) / 4%) 1px, transparent 1px) 0 0 / 32px 32px,
-    linear-gradient(90deg, rgb(var(--accent-rgb) / 4%) 1px, transparent 1px) 0 0 / 32px 32px,
+    radial-gradient(circle, rgb(var(--accent-rgb) / 14%) 0.65px, transparent 1px) 0 0 / 20px 20px,
     radial-gradient(ellipse at 53% 46%, var(--scene-center) 0%, var(--scene-mid) 36%, var(--scene-edge) 72%);
 }
 .scene-ambient {
@@ -150,7 +154,9 @@ onUnmounted(() => {
   z-index: 1;
   inset: 0;
   cursor: grab;
-  touch-action: pan-y;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
   outline-offset: -5px;
 }
 .sculpture-stage[data-dragging] { cursor: grabbing; }
@@ -204,8 +210,11 @@ onUnmounted(() => {
 .scene-state { display: flex; align-items: center; gap: 0.4rem; }
 .scene-state i { width: 4px; height: 4px; border-radius: 50%; background: var(--text-dim); }
 .scene-state .is-active { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
-.scene-icon-button { display: grid; width: 2.35rem; height: 2.35rem; place-items: center; border: 1px solid var(--line); border-radius: 0.4rem; background: transparent; color: var(--text-muted); cursor: pointer; transition: color 180ms, background 180ms; }
-.scene-icon-button:hover { color: var(--accent); background: var(--surface-2); }
+.scene-icon-button { display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--text-muted); cursor: pointer; transition: color 220ms, background 220ms; }
+.scene-icon-button svg { transition: transform 450ms cubic-bezier(0.16, 1, 0.3, 1); }
+.scene-icon-button:hover { color: var(--accent); background: rgb(var(--accent-rgb) / 8%); }
+.scene-icon-button:hover svg { transform: rotate(-65deg); }
+.scene-icon-button:active svg { transform: rotate(-110deg) scale(0.9); }
 button:disabled { opacity: 0.4; cursor: default; }
 .panel-terminal { display: flex; align-items: flex-start; gap: 0.8rem; padding: 1.1rem 1.4rem; border-top: 1px solid var(--line); color: var(--text-dim); }
 .terminal-output { display: grid; gap: 0.4rem; min-width: 0; font-family: var(--font-mono); font-size: clamp(0.49rem, 0.64vw, 0.61rem); line-height: 1.5; }
@@ -226,7 +235,6 @@ button:disabled { opacity: 0.4; cursor: default; }
   .sculpture-window { height: 22rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sculpture-stage { cursor: default; }
   .sculpture-stage :deep(canvas), .terminal-output b { animation: none; }
 }
 </style>

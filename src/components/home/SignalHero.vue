@@ -8,7 +8,7 @@ import { siteConfig } from '../../data/site'
 <template>
   <section class="hero container" aria-labelledby="hero-title">
     <div class="hero-grid" aria-hidden="true" />
-    <div class="hero-content" data-spatial="subtle">
+    <div class="hero-content">
       <p class="hero-kicker"><span /> INDEPENDENT MIND. OPEN SOURCE.</p>
       <h1 id="hero-title" class="hero-title">
         <span class="hero-title-line">让复杂技术，</span>
@@ -19,10 +19,10 @@ import { siteConfig } from '../../data/site'
         从底层逻辑到交互细节，构建值得长久使用的软件。
       </p>
       <div class="hero-actions">
-        <AppLink class="button button--primary" data-spatial to="/software">
+        <AppLink class="button button--primary" data-spatial="magnetic" to="/software">
           探索软件作品 <ArrowUpRight :size="18" />
         </AppLink>
-        <a class="hero-github" :href="siteConfig.github" target="_blank" rel="noreferrer">
+        <a class="hero-github" data-spatial="magnetic" :href="siteConfig.github" target="_blank" rel="noreferrer">
           <Code2 :size="17" /> GitHub <ArrowUpRight :size="13" />
         </a>
       </div>
@@ -87,8 +87,8 @@ import { siteConfig } from '../../data/site'
 }
 .hero-description strong { color: var(--text-strong); font-weight: 500; }
 .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1.8rem; margin-top: 2.3rem; }
-.hero-actions .button { min-height: 3.35rem; padding-inline: 1.3rem; border-radius: 0.12rem; border: 1px solid var(--accent); background: rgb(var(--accent-rgb) / 10%); color: var(--accent); box-shadow: inset 0 0 20px rgb(var(--accent-rgb) / 5%), 4px 4px 0 rgb(var(--accent-rgb) / 14%); font-family: var(--font-sans); font-size: 0.85rem; }
-.hero-actions .button:hover { background: rgb(var(--accent-rgb) / 18%); box-shadow: inset 0 0 24px rgb(var(--accent-rgb) / 8%), 6px 6px 0 rgb(var(--accent-rgb) / 18%); }
+.hero-actions .button { min-height: 3.35rem; padding-inline: 1.4rem; border-radius: 0.35rem; border: 1px solid rgb(var(--accent-rgb) / 55%); background: rgb(var(--accent-rgb) / 10%); color: var(--accent); box-shadow: inset 0 1px 0 rgb(var(--accent-rgb) / 15%), 0 6px 24px rgb(var(--accent-rgb) / 5%); font-family: var(--font-sans); font-size: 0.85rem; }
+.hero-actions .button:hover, .hero-actions .button:focus-visible { border-color: var(--accent); background: var(--accent); color: var(--surface-0); box-shadow: inset 0 1px 0 rgb(var(--ink-rgb) / 20%), 0 10px 32px rgb(var(--accent-rgb) / 19%); }
 .hero-github { display: inline-flex; min-height: 2.75rem; align-items: center; gap: 0.65rem; color: var(--text-muted); font-size: 0.85rem; text-decoration: none; transition: color 200ms; }
 .hero-github:hover { color: var(--accent); }
 .hero-github svg:last-child { transition: transform 200ms; }

@@ -30,7 +30,7 @@ const sequence = String(props.index + 1).padStart(2, '0')
     </div>
 
     <div class="card-visual" aria-hidden="true">
-      <div class="project-cube"><span v-for="face in 6" :key="face" /></div>
+      <div class="project-cube" data-spatial-detail><span v-for="face in 6" :key="face" /></div>
       <span class="visual-sequence">{{ sequence }}</span>
       <div class="visual-product">
         <span class="visual-label">PROJECT / {{ project.year }}</span>
@@ -66,7 +66,7 @@ const sequence = String(props.index + 1).padStart(2, '0')
   flex-direction: column;
   overflow: visible;
   border: 1px solid var(--line);
-  border-radius: 0.15rem;
+  border-radius: 0.5rem;
   background: var(--card-bg);
   transform-style: preserve-3d;
   color: inherit;
@@ -78,6 +78,21 @@ const sequence = String(props.index + 1).padStart(2, '0')
     transform 220ms ease,
     box-shadow 220ms ease;
 }
+
+.software-card::after {
+  position: absolute;
+  inset: -1px;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgb(var(--accent-rgb) / 65%), transparent 35%, transparent 65%, rgb(var(--accent-rgb) / 25%)) border-box;
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+  content: '';
+}
+.software-card:active { scale: 0.994; }
 
 .card-light {
   position: absolute;
@@ -98,7 +113,8 @@ const sequence = String(props.index + 1).padStart(2, '0')
   left: -28rem;
   background: radial-gradient(
     28rem circle at center,
-    rgb(var(--accent-rgb) / 9%),
+    rgb(var(--ink-rgb) / 8%) 0%,
+    rgb(var(--accent-rgb) / 12%) 18%,
     transparent 65%
   );
   transform: translate3d(14rem, 8rem, 0);
@@ -108,14 +124,15 @@ const sequence = String(props.index + 1).padStart(2, '0')
   will-change: transform;
 }
 
-.software-card:hover {
+.software-card:hover, .software-card:focus-visible {
   border-color: color-mix(in srgb, var(--accent) 38%, var(--line));
   box-shadow:
     0 1.5rem 4rem rgb(var(--shadow-rgb) / var(--shadow-alpha)),
-    0 0 3.5rem rgb(var(--accent-rgb) / 7%);
+    0 0 3.5rem rgb(var(--accent-rgb) / 9%);
 }
 
-.software-card:hover .card-light {
+.software-card:hover .card-light, .software-card:focus-visible .card-light,
+.software-card:hover::after, .software-card:focus-visible::after {
   opacity: 1;
 }
 
@@ -135,6 +152,7 @@ const sequence = String(props.index + 1).padStart(2, '0')
 .card-topline {
   padding: 1rem 1.1rem;
   border-bottom: 1px solid var(--line);
+  border-radius: inherit;
 }
 
 .status {
@@ -185,7 +203,7 @@ const sequence = String(props.index + 1).padStart(2, '0')
 .project-cube span:nth-child(4) { transform: rotateY(-90deg) translateZ(2.1rem); }
 .project-cube span:nth-child(5) { transform: rotateX(90deg) translateZ(2.1rem); }
 .project-cube span:nth-child(6) { transform: rotateX(-90deg) translateZ(2.1rem); }
-.software-card:hover .project-cube { transform: perspective(600px) rotateX(-38deg) rotateY(125deg) translateZ(8px); }
+.software-card:hover .project-cube, .software-card:focus-visible .project-cube { transform: perspective(600px) rotateX(-38deg) rotateY(125deg) translateZ(8px); }
 
 .visual-sequence {
   position: absolute;
@@ -225,7 +243,7 @@ const sequence = String(props.index + 1).padStart(2, '0')
   transition: color 220ms ease, transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.software-card:hover .visual-product strong {
+.software-card:hover .visual-product strong, .software-card:focus-visible .visual-product strong {
   color: var(--accent);
   transform: translateX(0.35rem);
 }
@@ -280,8 +298,8 @@ const sequence = String(props.index + 1).padStart(2, '0')
   transition: transform 180ms ease;
 }
 
-.software-card:hover .card-arrow {
-  transform: translate(2px, -2px);
+.software-card:hover .card-arrow, .software-card:focus-visible .card-arrow {
+  transform: translate(4px, -4px);
 }
 
 .card-stack {
