@@ -1,9 +1,11 @@
 import * as THREE from 'three'
 import { SVGLoader } from 'three/addons/loaders/SVGLoader.js'
 import { MeshSurfaceSampler } from 'three/addons/math/MeshSurfaceSampler.js'
+import { toCreasedNormals, mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js'
 import { unicornPath } from '../brand/unicorn'
 import { observeTheme } from '../../composables/useTheme'
 import { InertialRotation } from './inertialRotation'
+import { createHologramLines } from './hologramLines'
 
 // Supported by Three.js; the accompanying declaration omits this sampler method.
 declare module 'three/addons/math/MeshSurfaceSampler.js' {
@@ -111,9 +113,8 @@ export function createIdentityScene(
 
   const orbitGroups: THREE.Group[] = []
   let hologram: THREE.ShaderMaterial
-  let outline: THREE.LineSegments<THREE.EdgesGeometry, THREE.LineBasicMaterial>
   let edgeGlow: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
-  let sculpture: THREE.Mesh
+  let sculpture: THREE.LineSegments<THREE.BufferGeometry, THREE.ShaderMaterial>
   let particles: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
   let dust: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
   let scan: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>
@@ -127,29 +128,35 @@ export function createIdentityScene(
   try {
     const svg = new SVGLoader().parse(`<svg xmlns="http://www.w3.org/2000/svg"><path d="${unicornPath}" /></svg>`)
     const shapes = svg.paths.flatMap(path => path.toShapes())
-    const geometry = own(new THREE.ExtrudeGeometry(shapes, {
-      depth: 140, bevelEnabled: false,
-      steps: 1, curveSegments: 12,
-    }))
+    const extrusion = new THREE.ExtrudeGeometry(shapes, {
+      depth: 60, bevelEnabled: true,
+      bevelThickness: 32, bevelSize: 7, bevelOffset: -3.5,
+      bevelSegments: compact.matches ? 8 : 12,
+      steps: 2, curveSegments: compact.matches ? 20 : 32,
+    })
+    // Smooth in SVG units before scaling: the normal utility welds at 0.01 units.
+    // A small inset preserves the separate horn, eye and mane details.
+    toCreasedNormals(extrusion, Math.PI * 0.38)
+    extrusion.deleteAttribute('uv')
+    const geometry = own(mergeVertices(extrusion, 0.001))
+    extrusion.dispose()
     geometry.rotateX(Math.PI)
     geometry.scale(0.0027, 0.0027, 0.0027)
     geometry.center()
-    // The hologram and surface sampler use positions/normals, never UVs.
-    geometry.deleteAttribute('uv')
+    const lineGeometry = own(createHologramLines(geometry))
     hologram = own(new THREE.ShaderMaterial({
-      transparent: true, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true,
+      transparent: true, depthWrite: false,
       blending: THREE.AdditiveBlending,
-      uniforms: { uTime: { value: 0 }, uOpacity: { value: 1 }, uLightMode: { value: 0 }, uPointer: { value: pointer }, uHover: { value: 0 }, uAspect: { value: 1 } },
+      uniforms: { uTime: { value: 0 }, uOpacity: { value: 1 }, uLightMode: { value: 0 }, uPointer: { value: pointer }, uHover: { value: 0 }, uAspect: { value: 1 }, uHalfDepth: { value: geometry.boundingBox!.max.z } },
       vertexShader: `
         varying vec3 vPosition;
-        varying vec3 vNormal;
-        varying vec3 vView;
+        attribute float aStrength;
+        varying float vStrength;
         varying vec2 vScreen;
         void main() {
           vPosition = position;
           vec4 mv = modelViewMatrix * vec4(position, 1.0);
-          vNormal = normalize(normalMatrix * normal);
-          vView = normalize(-mv.xyz);
+          vStrength = aStrength;
           gl_Position = projectionMatrix * mv;
           vScreen = gl_Position.xy / gl_Position.w;
         }
@@ -157,50 +164,44 @@ export function createIdentityScene(
       fragmentShader: `
         uniform float uLightMode;
         varying vec3 vPosition;
-        varying vec3 vNormal;
-        varying vec3 vView;
+        varying float vStrength;
         uniform float uTime;
         uniform float uOpacity;
         uniform vec2 uPointer;
         uniform float uHover;
         uniform float uAspect;
+        uniform float uHalfDepth;
         varying vec2 vScreen;
         void main() {
-          float fresnel = pow(1.0 - abs(dot(normalize(vNormal), normalize(vView))), 2.0);
-          float lines = pow(0.5 + 0.5 * sin(vPosition.y * 160.0), 18.0);
           float scan = exp(-pow((vPosition.y - (1.5 - mod(uTime * 0.3, 3.0))) * 12.0, 2.0));
           vec2 delta = (vScreen - uPointer) * vec2(uAspect, 1.0);
           float light = exp(-dot(delta, delta) * 12.0) * uHover;
-          vec3 color = mix(vec3(0.13, 0.76, 0.43), vec3(0.55, 1.0, 0.76), scan);
-          color = mix(color, vec3(0.76, 1.0, 0.92), light * 0.65);
-          color = mix(color, mix(vec3(0.06, 0.32, 0.21), vec3(0.08, 0.47, 0.31), scan), uLightMode);
-          gl_FragColor = vec4(color, (0.055 + lines * 0.28 + fresnel * 0.48 + scan * 0.42 + light * 0.2) * uOpacity);
+          vec3 color = mix(vec3(0.24, 0.83, 0.51), vec3(0.7, 1.0, 0.87), min(1.0, light * 0.65 + scan * 0.5));
+          color = mix(color, vec3(0.08, 0.39, 0.25), uLightMode);
+          float depth = mix(0.62, 1.0, smoothstep(-uHalfDepth, uHalfDepth, vPosition.z));
+          gl_FragColor = vec4(color, vStrength * depth * (0.64 + scan * 0.28 + light * 0.34) * uOpacity);
         }
       `,
     }))
-    sculpture = new THREE.Mesh(geometry, hologram)
+    sculpture = new THREE.LineSegments(lineGeometry, hologram)
     emblem.add(sculpture)
-    const edgeGeometry = own(new THREE.EdgesGeometry(geometry, 28))
-    outline = new THREE.LineSegments(
-      edgeGeometry,
-      own(new THREE.LineBasicMaterial({ color: 0x91ffc3, transparent: true, opacity: 0.82, blending: THREE.AdditiveBlending, depthWrite: false })),
-    )
-    emblem.add(outline)
-
-    // Sample only the silhouette edges. Glow follows the cursor in screen space,
-    // so it stays attached to the correct edge even while the object is rotated.
-    const edgePositions = edgeGeometry.getAttribute('position')
+    // The invisible shell is used only for the particle transition.
+    const sample = new THREE.Vector3()
+    const sampleNormal = new THREE.Vector3()
+    const sampler = new MeshSurfaceSampler(new THREE.Mesh(geometry, hologram)).setRandomGenerator(random).build()
     const glowPositions: number[] = []
-    const edgeStart = new THREE.Vector3()
-    const edgeEnd = new THREE.Vector3()
-    const edgePoint = new THREE.Vector3()
-    for (let i = 0; i < edgePositions.count; i += 2) {
-      edgeStart.fromBufferAttribute(edgePositions, i)
-      edgeEnd.fromBufferAttribute(edgePositions, i + 1)
-      const steps = Math.max(1, Math.ceil(edgeStart.distanceTo(edgeEnd) / 0.014))
-      for (let j = 0; j <= steps; j++) {
-        edgePoint.lerpVectors(edgeStart, edgeEnd, j / steps)
-        glowPositions.push(edgePoint.x, edgePoint.y, edgePoint.z)
+    const linePositions = lineGeometry.getAttribute('position')
+    const lineStrengths = lineGeometry.getAttribute('aStrength')
+    const lineStart = new THREE.Vector3()
+    const lineEnd = new THREE.Vector3()
+    for (let i = 0; i < linePositions.count; i += 2) {
+      if (lineStrengths.getX(i) < 1) continue
+      lineStart.fromBufferAttribute(linePositions, i)
+      lineEnd.fromBufferAttribute(linePositions, i + 1)
+      const steps = Math.max(1, Math.ceil(lineStart.distanceTo(lineEnd) / 0.025))
+      for (let step = 0; step < steps; step++) {
+        sample.lerpVectors(lineStart, lineEnd, step / steps)
+        glowPositions.push(sample.x, sample.y, sample.z)
       }
     }
     const glowGeometry = own(new THREE.BufferGeometry())
@@ -215,11 +216,12 @@ export function createIdentityScene(
         uniform float uDpr;
         varying float vGlow;
         void main() {
-          vec4 clip = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          vec4 clip = projectionMatrix * mv;
           vec2 delta = (clip.xy / clip.w - uPointer) * vec2(uAspect, 1.0);
           vGlow = exp(-dot(delta, delta) * 14.0) * uHover;
           gl_Position = clip;
-          gl_PointSize = (2.0 + vGlow * 19.0) * uDpr;
+          gl_PointSize = (1.5 + vGlow * 10.0) * uDpr;
         }
       `,
       fragmentShader: `
@@ -230,7 +232,7 @@ export function createIdentityScene(
           float halo = exp(-dot(p, p) * 18.0);
           vec3 color = mix(vec3(0.14, 0.8, 0.42), vec3(0.67, 1.0, 0.82), halo * vGlow);
           color = mix(color, vec3(0.08, 0.51, 0.31), uLightMode);
-          gl_FragColor = vec4(color, halo * vGlow * 0.2);
+          gl_FragColor = vec4(color, halo * vGlow * 0.075);
         }
       `,
     }))
@@ -238,13 +240,12 @@ export function createIdentityScene(
     edgeGlow.frustumCulled = false
     emblem.add(edgeGlow)
 
-    const sample = new THREE.Vector3()
-    const sampler = new MeshSurfaceSampler(sculpture).setRandomGenerator(random).build()
     const count = compact.matches ? 14000 : 24000
     const particleData = new Float32Array(count * 7)
     for (let i = 0; i < count; i++) {
       const offset = i * 7
-      sampler.sample(sample)
+      sampler.sample(sample, sampleNormal)
+      sample.addScaledVector(sampleNormal, 0.006)
       sample.toArray(particleData, offset)
       const angle = random() * Math.PI * 2
       const radius = 0.3 + random() * 0.6
@@ -291,7 +292,7 @@ export function createIdentityScene(
           float sweep = exp(-pow((position.y - (1.6 - mod(uTime * 0.32, 3.2))) * 8.0, 2.0));
           vLight = proximity * 0.85 + sweep * 0.5;
           gl_PointSize = (1.5 + aSeed * 1.1 + vLight * 0.9) * uDpr * (6.5 / -mv.z);
-          vAlpha = (0.16 + uMorph * 0.84) * (0.6 + aSeed * 0.4);
+          vAlpha = uMorph * (0.6 + aSeed * 0.4);
         }
       `,
       fragmentShader: `
@@ -438,8 +439,6 @@ export function createIdentityScene(
         material.uniforms.uLightMode!.value = light ? 1 : 0
         material.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending
       }
-      outline.material.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending
-      outline.material.color.set(light ? 0x2e7252 : 0x91ffc3)
       ringMaterial.color.set(light ? 0x639777 : 0x3d9d69)
       ringLight.color.set(light ? 0x245c3f : 0x9bf8c2)
       tickMaterial.color.set(light ? 0x41624b : 0x78e2a8)
@@ -498,7 +497,7 @@ export function createIdentityScene(
     assembly.quaternion.copy(rotation.orientation)
     // Parallax translates the presentation; it never fights the rotation under a grab.
     presentation.position.set(pointer.x * 0.045, pointer.y * 0.035, 0)
-    emblem.rotation.set(0.04, -0.22, -0.045)
+    emblem.rotation.set(0.07, -0.36, -0.045)
     emblem.position.y = Math.sin(time * 0.55) * 0.025 * (1 - hover)
     pointerSpeed *= Math.exp(-delta * 7)
     impulse *= Math.exp(-delta * 5)
@@ -506,16 +505,14 @@ export function createIdentityScene(
       group.rotation.z = (index === 0 ? -0.36 : index === 1 ? 0.58 : -0.3) + time * (index % 2 ? -0.065 : 0.045)
     })
     sculpture.visible = morph < 0.998
-    outline.visible = sculpture.visible
     // Zero-opacity point sprites still generate fragments; skip this pass at rest.
-    edgeGlow.visible = hover > 0.001
+    edgeGlow.visible = hover > 0.001 && morph < 0.998
     hologram.uniforms.uOpacity!.value = 1 - morph
     hologram.uniforms.uTime!.value = time
     hologram.uniforms.uHover!.value = hover
-    outline.material.opacity = (1 - morph) * 0.72
     edgeGlow.material.uniforms.uPointer!.value.copy(pointer)
-    edgeGlow.material.uniforms.uHover!.value = hover
-    particles.visible = true
+    edgeGlow.material.uniforms.uHover!.value = hover * (1 - morph)
+    particles.visible = morph > 0.001
     particles.material.uniforms.uMorph!.value = morph
     particles.material.uniforms.uTime!.value = time
     particles.material.uniforms.uHover!.value = hover

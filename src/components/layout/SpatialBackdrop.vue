@@ -24,5 +24,5 @@ onUnmounted(() => { alive = false; world?.dispose() })
 <style scoped>
 .spatial-field { position: fixed; z-index: -2; inset: 0; pointer-events: none; }
 .spatial-field :deep(canvas) { display: block; width: 100%; height: 100%; }
-.spatial-vignette { position: fixed; z-index: -1; inset: 0; pointer-events: none; background: linear-gradient(to bottom, rgb(var(--surface-rgb) / 45%), transparent 55%), radial-gradient(ellipse at 50% 28%, rgb(var(--surface-rgb) / 28%) 15%, transparent 75%); }
+.spatial-vignette { position: fixed; z-index: -1; inset: 0; pointer-events: none; background: linear-gradient(to bottom, rgb(var(--surface-rgb) / 16%), transparent 42%), radial-gradient(ellipse at 50% 32%, rgb(var(--surface-rgb) / 28%) 15%, transparent 72%); }
 </style>

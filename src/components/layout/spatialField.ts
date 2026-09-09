@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { observeTheme } from '../../composables/useTheme'
 import { createSpatialGrid } from './spatialGeometry'
+import { createFloatingObjects } from './floatingObjects'
 
 /** A persistent, low-resolution world shared by every route. */
 export function createSpatialField(host: HTMLElement) {
@@ -75,7 +76,7 @@ export function createSpatialField(host: HTMLElement) {
   let stopTheme: (() => void) | undefined
   let renderWidth = 0
   let renderHeight = 0
-  let floatingMaterial: THREE.ShaderMaterial
+  let floatingObjects: ReturnType<typeof createFloatingObjects> | undefined
   let matrixGeometry: THREE.BufferGeometry | undefined
   let matrixPositions: THREE.BufferAttribute | undefined
   const matrixScale = { value: 1 }
@@ -108,10 +109,10 @@ export function createSpatialField(host: HTMLElement) {
       varying float vHeight;
       varying float vLight;
       void main() {
-        float fade = (1.0 - smoothstep(8.0, 35.0, vDepth)) * smoothstep(1.0, 5.0, vDepth);
+        float fade = (1.0 - smoothstep(14.0, 43.0, vDepth)) * smoothstep(1.0, 5.0, vDepth);
         vec3 color = mix(vec3(0.18, 0.71, 0.4), vec3(0.19, 0.35, 0.25), uLightMode);
         color = mix(color, mix(vec3(0.52, 1.0, 0.77), vec3(0.12, 0.42, 0.29), uLightMode), min(vLight, 1.0));
-        gl_FragColor = vec4(color, fade * (0.14 + (vHeight + 2.0) * 0.1 + vLight * 0.42) * mix(1.0, 0.65, uLightMode));
+        gl_FragColor = vec4(color, fade * (0.2 + (vHeight + 2.0) * 0.1 + vLight * 0.42) * mix(1.0, 0.65, uLightMode));
       }
     `,
   }))
@@ -184,59 +185,8 @@ export function createSpatialField(host: HTMLElement) {
     scene.add(matrix)
 
     const wireMaterial = own(new THREE.LineBasicMaterial({ color: 0x50c889, transparent: true, opacity: 0.16 }))
-    const box = own(new THREE.BoxGeometry(1, 1, 1))
-    const edges = own(new THREE.EdgesGeometry(box))
-    const edgePositions = edges.getAttribute('position')
-    const wirePositions: number[] = []
-    const wireIndices: number[] = []
-    for (let i = 0; i < 8; i++) {
-      for (let vertex = 0; vertex < edgePositions.count; vertex++) {
-        wirePositions.push(edgePositions.getX(vertex), edgePositions.getY(vertex), edgePositions.getZ(vertex))
-        wireIndices.push(i)
-      }
-    }
-    const wireGeometry = own(new THREE.BufferGeometry())
-    wireGeometry.setAttribute('position', new THREE.Float32BufferAttribute(wirePositions, 3))
-    wireGeometry.setAttribute('aWire', new THREE.Float32BufferAttribute(wireIndices, 1))
-    // Eight independent orbits, one draw call, no per-frame matrix or buffer uploads.
-    floatingMaterial = own(new THREE.ShaderMaterial({
-      transparent: true, depthWrite: false,
-      uniforms: {
-        uTime: gridMaterial.uniforms.uTime!,
-        uScroll: { value: 0 },
-        uColor: { value: wireMaterial.color },
-        uOpacity: { value: wireMaterial.opacity },
-      },
-      vertexShader: `
-        attribute float aWire;
-        uniform float uTime;
-        uniform float uScroll;
-        void main() {
-          vec3 p = position * (0.6 + mod(aWire, 3.0) * 0.3);
-          float x = aWire * 0.4 + uTime * 0.018;
-          float y = aWire * 0.6 + uTime * 0.045;
-          p.xy = mat2(cos(0.4), sin(0.4), -sin(0.4), cos(0.4)) * p.xy;
-          p.xz = mat2(cos(y), -sin(y), sin(y), cos(y)) * p.xz;
-          p.yz = mat2(cos(x), sin(x), -sin(x), cos(x)) * p.yz;
-          p += vec3((mod(aWire, 2.0) * 2.0 - 1.0) * (5.8 + aWire * 0.55),
-            -0.8 + mod(aWire, 3.0) * 2.6 + sin(uTime * 0.22 + aWire) * 0.15 + sin(uScroll * 0.5) * 0.8,
-            -aWire * 2.5);
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform vec3 uColor;
-        uniform float uOpacity;
-        void main() {
-          gl_FragColor = vec4(uColor, uOpacity);
-          #include <colorspace_fragment>
-        }
-      `,
-    }))
-    const wires = new THREE.LineSegments(wireGeometry, floatingMaterial)
-    // Positions live in the shader rather than in the geometry's local bounds.
-    wires.frustumCulled = false
-    world.add(wires)
+    floatingObjects = own(createFloatingObjects(interaction, fieldShader, matchMedia('(pointer: coarse), (max-width: 700px)').matches))
+    world.add(floatingObjects.group)
 
     const points: number[] = []
     const connections: number[] = []
@@ -269,7 +219,6 @@ export function createSpatialField(host: HTMLElement) {
       matrixMaterial.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending
       wireMaterial.color.set(light ? 0x42634e : 0x50c889)
       wireMaterial.opacity = light ? 0.2 : 0.16
-      floatingMaterial.uniforms.uOpacity!.value = wireMaterial.opacity
       pointMaterial.color.set(light ? 0x366247 : 0x9cffc6)
       render(0)
     })
@@ -295,9 +244,9 @@ export function createSpatialField(host: HTMLElement) {
 
   function render(delta: number) {
     const amount = motion.matches ? 1 : 1 - Math.exp(-delta * 10)
-    camera.position.x = THREE.MathUtils.lerp(camera.position.x, targetX * 0.8, amount)
-    camera.position.y = THREE.MathUtils.lerp(camera.position.y, 1.3 + targetY * 0.35, amount)
-    camera.lookAt(0, 0, -8)
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, targetX * 0.65, amount)
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, 1.3 + targetY * 0.28, amount)
+    camera.lookAt(targetX * 0.38, targetY * 0.2, -8)
     scrollDepth = THREE.MathUtils.lerp(scrollDepth, window.scrollY * 0.0015, amount)
     gridMaterial.uniforms.uTime!.value = time
     gridMaterial.uniforms.uScroll!.value = scrollDepth % 1
@@ -307,7 +256,7 @@ export function createSpatialField(host: HTMLElement) {
     interaction.uPresence.value = THREE.MathUtils.lerp(interaction.uPresence.value, presence, amount)
     speed *= Math.exp(-delta * 5)
     interaction.uSpeed.value = THREE.MathUtils.lerp(interaction.uSpeed.value, speed, amount)
-    floatingMaterial.uniforms.uScroll!.value = scrollDepth
+    floatingObjects?.update(scrollDepth, motion.matches)
     renderer.render(scene, camera)
   }
 
@@ -384,6 +333,8 @@ export function createSpatialField(host: HTMLElement) {
 
   function pointerDown(event: PointerEvent) {
     if (motion.matches || event.button !== 0 || !event.isPrimary) return
+    // Page actions and sculpture drags retain their own feedback.
+    if (event.target instanceof Element && event.target.closest('a, button, input, textarea, select, [role="group"], [role="switch"]')) return
     targetX = event.clientX / innerWidth * 2 - 1
     targetY = 1 - event.clientY / innerHeight * 2
     presence = 1
