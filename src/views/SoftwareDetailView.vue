@@ -89,7 +89,7 @@ useSeo(() => {
 <template>
   <article v-if="project" class="detail" :data-software-slug="project.slug">
     <header class="detail-hero container">
-      <nav class="detail-breadcrumb" aria-label="面包屑">
+      <nav class="detail-breadcrumb" data-depth="5" aria-label="面包屑">
         <AppLink to="/">首页</AppLink>
         <span aria-hidden="true">/</span>
         <AppLink to="/software">软件作品</AppLink>
@@ -98,11 +98,11 @@ useSeo(() => {
       </nav>
 
       <div class="detail-heading">
-        <div>
+        <div data-depth="18">
           <p class="eyebrow">{{ project.category.toUpperCase() }} {{ project.year }}</p>
           <h1>{{ project.title }}</h1>
         </div>
-        <p>{{ project.summary }}</p>
+        <p data-depth="9">{{ project.summary }}</p>
       </div>
 
       <div class="detail-actions">
@@ -152,21 +152,21 @@ useSeo(() => {
     </header>
 
     <div class="content-layout container">
-      <aside class="content-aside">
+      <aside class="content-aside" data-depth="5">
         <span>PROJECT / BRIEF</span>
         <div class="aside-line" aria-hidden="true" />
         <nav v-if="detail?.headings.length" class="content-toc" aria-label="本文目录">
           <a v-for="heading in detail.headings" :key="heading.id" :href="`#${heading.id}`">{{ heading.text }}</a>
         </nav>
       </aside>
-      <div class="markdown-body" v-html="getSoftwareContent(project.slug)" />
+      <div class="markdown-body" data-depth-content v-html="getSoftwareContent(project.slug)" />
     </div>
   </article>
 
   <section v-else class="not-found container">
-    <p class="eyebrow">PROJECT NOT FOUND</p>
-    <h1>没有找到这个项目。</h1>
-    <AppLink class="button button--primary" to="/software">返回软件列表</AppLink>
+    <p class="eyebrow" data-depth="6">PROJECT NOT FOUND</p>
+    <h1 data-depth="18">没有找到这个项目。</h1>
+    <AppLink class="button button--primary" data-spatial="magnetic" to="/software">返回软件列表</AppLink>
   </section>
 </template>
 

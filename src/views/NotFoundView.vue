@@ -12,12 +12,12 @@ useSeo({
 
 <template>
   <section class="not-found container">
-    <p class="eyebrow">PAGE NOT FOUND</p>
-    <h1>没有找到这个页面。</h1>
-    <p>当前地址不存在或已经移动。</p>
+    <p class="eyebrow" data-depth="6">PAGE NOT FOUND</p>
+    <h1 data-depth="18">没有找到这个页面。</h1>
+    <p data-depth="9">当前地址不存在或已经移动。</p>
     <div class="actions">
-      <AppLink class="button button--primary" to="/">返回首页</AppLink>
-      <AppLink class="button button--ghost" to="/software">查看软件作品</AppLink>
+      <AppLink class="button button--primary" data-spatial="magnetic" to="/">返回首页</AppLink>
+      <AppLink class="button button--ghost" data-spatial="magnetic" to="/software">查看软件作品</AppLink>
     </div>
   </section>
 </template>

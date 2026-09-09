@@ -29,10 +29,10 @@ watch(
   <header class="site-header">
     <div class="header-inner container">
       <AppLink class="brand" to="/" aria-label="返回首页">
-        <span class="brand-logo">
+        <span class="brand-logo" data-spatial="magnetic" data-depth="4">
           <UnicornLogo title="X.LUCIFER 独角兽标志" />
         </span>
-        <span class="brand-copy">
+        <span class="brand-copy" data-depth="2">
           <strong>{{ siteConfig.brand }}</strong>
           <small>SOFTWARE ENGINEER</small>
         </span>

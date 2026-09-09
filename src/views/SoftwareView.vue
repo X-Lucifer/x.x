@@ -59,11 +59,11 @@ useSeo({
 <template>
   <div class="page container">
     <header class="page-header">
-      <div>
+      <div data-depth="18">
         <p class="eyebrow">OPEN SOURCE ARCHIVE</p>
         <h1 class="page-title">软件作品</h1>
       </div>
-      <p class="page-description">
+      <p class="page-description" data-depth="9">
         覆盖 AI 图像增强、离线 Markdown 客户端、静态资源服务与 DAV 协议服务。
         每项作品均链接至公开源码，并记录产品边界、核心能力与工程实现。
       </p>
@@ -75,7 +75,7 @@ useSeo({
           v-for="category in categories"
           :key="category"
           type="button"
-          data-spatial
+          data-spatial="magnetic"
           :aria-pressed="activeCategory === category"
           :class="{ 'filter--active': activeCategory === category }"
           @click="activeCategory = category"
@@ -83,7 +83,7 @@ useSeo({
           {{ category }}
         </button>
       </div>
-      <span class="result-count">{{ visibleProjects.length.toString().padStart(2, '0') }} PROJECTS</span>
+      <span class="result-count" data-depth="6">{{ visibleProjects.length.toString().padStart(2, '0') }} PROJECTS</span>
     </div>
 
     <div class="software-grid">

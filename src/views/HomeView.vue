@@ -52,11 +52,11 @@ useSeo({
 
     <section class="featured section container">
       <div class="section-heading">
-        <div>
+        <div data-depth="14">
           <p class="eyebrow">SELECTED WORK</p>
           <h2 class="section-title">软件作品</h2>
         </div>
-        <AppLink class="text-link" to="/software">
+        <AppLink class="text-link" data-spatial="magnetic" to="/software">
           查看全部软件
           <ArrowRight :size="17" />
         </AppLink>
@@ -73,7 +73,7 @@ useSeo({
     </section>
 
     <section class="technology section container">
-      <div class="technology-intro">
+      <div class="technology-intro" data-depth="12">
         <p class="eyebrow">ENGINEERING STACK</p>
         <h2 class="section-title">覆盖软件产品<br />完整生命周期。</h2>
         <p>
@@ -96,7 +96,7 @@ useSeo({
     </section>
 
     <section class="principles section container">
-      <div class="principle-intro">
+      <div class="principle-intro" data-depth="12">
         <p class="eyebrow">WORK PHILOSOPHY</p>
         <h2 class="section-title">从技术实现，<br />到完整交付。</h2>
       </div>

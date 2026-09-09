@@ -9,12 +9,12 @@ import { siteConfig } from '../../data/site'
   <section class="hero container" aria-labelledby="hero-title">
     <div class="hero-grid" aria-hidden="true" />
     <div class="hero-content">
-      <p class="hero-kicker"><span /> INDEPENDENT MIND. OPEN SOURCE.</p>
-      <h1 id="hero-title" class="hero-title">
+      <p class="hero-kicker" data-depth="6"><span /> INDEPENDENT MIND. OPEN SOURCE.</p>
+      <h1 id="hero-title" class="hero-title" data-depth="18">
         <span class="hero-title-line">让复杂技术，</span>
         <span class="hero-title-line hero-title-accent">成为可靠产品。</span>
       </h1>
-      <p class="hero-description">
+      <p class="hero-description" data-depth="10">
         我是 <strong>{{ siteConfig.name }}</strong>，全栈软件工程师与开源作者。<br />
         从底层逻辑到交互细节，构建值得长久使用的软件。
       </p>
@@ -26,12 +26,12 @@ import { siteConfig } from '../../data/site'
           <Code2 :size="17" /> GitHub <ArrowUpRight :size="13" />
         </a>
       </div>
-      <div class="hero-signature">
+      <div class="hero-signature" data-depth="7">
         <span class="signature-line" aria-hidden="true" />
         <div><span>DESKTOP / SERVER / TOOLING</span><p>C# / .NET <i>·</i> Rust <i>·</i> Go <i>·</i> Vue</p></div>
       </div>
     </div>
-    <IdentitySculpture class="hero-sculpture" />
+    <IdentitySculpture class="hero-sculpture" data-depth="22" />
   </section>
 </template>
 

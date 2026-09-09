@@ -9,7 +9,7 @@ const currentYear = new Date().getFullYear()
 <template>
   <footer class="site-footer">
     <div class="footer-inner container">
-      <div class="footer-identity">
+      <div class="footer-identity" data-depth="10">
         <span class="footer-mark">
           <UnicornLogo title="X.LUCIFER" />
         </span>
@@ -20,12 +20,12 @@ const currentYear = new Date().getFullYear()
       </div>
 
       <div class="footer-meta">
-        <a :href="siteConfig.github" target="_blank" rel="noreferrer">
+        <a data-spatial="magnetic" :href="siteConfig.github" target="_blank" rel="noreferrer">
           <Code2 :size="16" />
           GitHub
           <ArrowUpRight :size="14" />
         </a>
-        <span>© {{ currentYear }} {{ siteConfig.name }}</span>
+        <span data-depth="6">© {{ currentYear }} {{ siteConfig.name }}</span>
       </div>
     </div>
   </footer>

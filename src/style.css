@@ -211,6 +211,25 @@ button:focus-visible {
   transition: border-color 220ms ease, box-shadow 220ms ease;
 }
 .software-grid { perspective: 1400px; }
+/* Independent transforms preserve arrival animations and the local hover spring. */
+[data-floating] {
+  --float-x: 0px;
+  --float-y: 0px;
+  --float-rotation: none;
+  --float-shadow-x: 0px;
+  --float-shadow-y: 22px;
+  translate: var(--float-x) var(--float-y);
+  rotate: var(--float-rotation);
+}
+[data-floating-moving] { will-change: translate, rotate; }
+[data-floating-moving][data-spatial-active] { will-change: translate, rotate, transform; }
+.hero-content { perspective: 1200px; }
+.software-card[data-floating], .profile-panel[data-floating], .detail-panel[data-floating], .contact-banner[data-floating] {
+  box-shadow:
+    var(--float-shadow-x) var(--float-shadow-y) 48px -20px rgb(var(--shadow-rgb) / var(--shadow-alpha)),
+    0 1px 0 rgb(var(--accent-rgb) / 8%);
+}
+.hero-title[data-floating] { text-shadow: 0 12px 32px rgb(var(--shadow-rgb) / var(--shadow-alpha)); }
 .software-card .card-copy { transform: translateZ(24px); }
 .software-card .card-topline, .software-card .card-stack { transform: translateZ(12px); }
 .technology-matrix [data-spatial-hover], .principle-list [data-spatial-hover], .capability-list [data-spatial-hover] {
@@ -241,11 +260,11 @@ button:focus-visible {
 }
 
 .button:hover {
-  translate: 0 -2px;
+  translate: var(--float-x, 0px) calc(var(--float-y, 0px) - 2px);
 }
 
 .button:active {
-  translate: 0 0;
+  translate: var(--float-x, 0px) var(--float-y, 0px);
   scale: 0.98;
 }
 
@@ -330,6 +349,10 @@ button:focus-visible {
   }
 }
 
+@media (hover: none), (pointer: coarse) {
+  [data-floating] { translate: none; rotate: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -349,6 +372,7 @@ button:focus-visible {
   }
 
   [data-spatial], .software-card .card-copy, .software-card .card-topline, .software-card .card-stack { transform: none; }
+  [data-floating] { translate: none; rotate: none; will-change: auto; }
   .button:hover, .button:active { translate: none; scale: none; }
   .software-card:active, .theme-toggle:active svg { scale: none; }
 }

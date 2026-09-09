@@ -39,11 +39,11 @@ useSeo({
 <template>
   <div class="about container">
     <header class="about-hero">
-      <div>
+      <div data-depth="18">
         <p class="eyebrow">ABOUT THE ENGINEER</p>
         <h1>工程理性，<br /><span>产品感性。</span></h1>
       </div>
-      <div class="about-intro">
+      <div class="about-intro" data-depth="9">
         <p>
           你好，我是 {{ siteConfig.name }}，一名全栈软件工程师与开源作者。我专注于把产品需求转化为边界清晰、运行可靠、能够独立交付的软件。
         </p>
@@ -77,7 +77,7 @@ useSeo({
     </section>
 
     <section class="capabilities">
-      <div class="capability-heading">
+      <div class="capability-heading" data-depth="12">
         <p class="eyebrow">CAPABILITIES</p>
         <h2 class="section-title">我如何构建</h2>
       </div>
@@ -91,7 +91,7 @@ useSeo({
     </section>
 
     <section class="technology-panel" aria-label="技术栈">
-      <p class="eyebrow">TECHNOLOGY MATRIX</p>
+      <p class="eyebrow" data-depth="10">TECHNOLOGY MATRIX</p>
       <dl>
         <div v-for="group in technologyGroups" :key="group.code" data-spatial="subtle">
           <dt>{{ group.code }} / {{ group.label }}</dt>
