@@ -19,6 +19,14 @@ export const createApp = ViteSSG(App, {
   ...routerOptions,
   base: routerBase(),
 }, ({ router }) => {
+  if (!import.meta.env.SSR) {
+    // Freeze the initial SSG asset URLs before client navigation changes the document path.
+    for (const link of document.querySelectorAll<HTMLLinkElement>(
+      'head link[rel="icon"], head link[rel="apple-touch-icon"], head link[rel="manifest"]',
+    )) {
+      link.setAttribute('href', link.href)
+    }
+  }
   router.beforeResolve(async to => {
     if (to.name !== 'software-detail') return
     const { loadSoftwareContent } = await import('./data/softwareContent')

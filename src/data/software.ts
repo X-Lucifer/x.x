@@ -13,7 +13,17 @@ export const softwareDocumentPaths = new Map(
   Object.entries(documents).map(([path, project]) => [project.slug, path]),
 )
 
-export const featuredProjects = softwareProjects.filter(project => project.featured)
+// The first and fourth cards occupy the wide diagonal on the homepage.
+const featuredProjectOrder = [
+  'tauri-obsidian-lite',
+  'x-xray',
+  'x-webdav-server',
+  'x-superresolution',
+]
+
+export const featuredProjects = featuredProjectOrder
+  .map(slug => softwareProjects.find(project => project.slug === slug && project.featured))
+  .filter((project): project is SoftwareProject => project !== undefined)
 
 export function getSoftwareBySlug(slug: string) {
   return softwareProjects.find(project => project.slug === slug)

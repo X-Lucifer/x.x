@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { ArrowUpRight } from '@lucide/vue'
 import AppLink from '../AppLink.vue'
 import type { SoftwareProject } from '../../types/software'
@@ -9,6 +10,9 @@ const props = defineProps<{
 }>()
 
 const sequence = String(props.index + 1).padStart(2, '0')
+const titleFit = computed(() =>
+  Math.max(1, ...props.project.title.split(/\s+/).map(part => part.length)) * 0.55,
+)
 
 </script>
 
@@ -16,7 +20,7 @@ const sequence = String(props.index + 1).padStart(2, '0')
   <AppLink
     class="software-card"
     data-spatial
-    :style="{ '--card-index': index }"
+    :style="{ '--card-index': index, '--title-fit': titleFit }"
     :to="`/software/${project.slug}`"
     :aria-label="`查看 ${project.title} 详情`"
   >
@@ -62,8 +66,10 @@ const sequence = String(props.index + 1).padStart(2, '0')
 .software-card {
   position: relative;
   display: flex;
+  min-width: 0;
   min-height: 28rem;
   flex-direction: column;
+  container-type: inline-size;
   overflow: visible;
   border: 1px solid var(--line);
   border-radius: 0.5rem;
@@ -172,12 +178,14 @@ const sequence = String(props.index + 1).padStart(2, '0')
 .card-visual {
   position: relative;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   min-height: 16rem;
   flex: 1;
   place-items: center;
   overflow: clip;
   border-bottom: 1px solid var(--line);
-  padding: clamp(1.5rem, 4vw, 3rem);
+  padding: clamp(1.5rem, 6cqi, 3rem);
+  padding-bottom: 3.5rem;
   background:
     linear-gradient(145deg, rgb(var(--accent-rgb) / 7%), transparent 44%),
     linear-gradient(var(--grid-line) 1px, transparent 1px),
@@ -222,6 +230,8 @@ const sequence = String(props.index + 1).padStart(2, '0')
   z-index: 1;
   display: grid;
   width: 100%;
+  min-width: 0;
+  container-type: inline-size;
   align-self: end;
   gap: 0.65rem;
 }
@@ -234,9 +244,10 @@ const sequence = String(props.index + 1).padStart(2, '0')
 }
 
 .visual-product strong {
-  max-width: 11ch;
+  max-width: 100%;
+  overflow-wrap: anywhere;
   color: var(--text-strong);
-  font-size: clamp(2rem, 4.2vw, 4.4rem);
+  font-size: min(clamp(2rem, 4.2vw, 4.4rem), calc(100cqi / var(--title-fit)));
   font-weight: 540;
   letter-spacing: -0.07em;
   line-height: 0.95;
@@ -274,6 +285,10 @@ const sequence = String(props.index + 1).padStart(2, '0')
   padding: 1.4rem 1.4rem 1.2rem;
 }
 
+.card-copy > div {
+  min-width: 0;
+}
+
 .card-copy h3,
 .card-copy p {
   margin: 0;
@@ -282,6 +297,7 @@ const sequence = String(props.index + 1).padStart(2, '0')
 .card-copy h3 {
   color: var(--text-strong);
   font-size: 1.4rem;
+  overflow-wrap: anywhere;
   letter-spacing: -0.035em;
 }
 

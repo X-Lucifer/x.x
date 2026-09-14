@@ -7,3 +7,4 @@ https://xlucifer.top/software/tauri-obsidian-lite/
 https://xlucifer.top/software/wails-obsidian-lite/
 https://xlucifer.top/software/x-superresolution/
 https://xlucifer.top/software/x-webdav-server/
+https://xlucifer.top/software/x-xray/

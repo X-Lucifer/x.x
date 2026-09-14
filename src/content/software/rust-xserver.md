@@ -8,7 +8,7 @@ order: 4
 status: Stable
 accent: #dfa878
 stack: [Rust 2024, Actix Web, Clap, Tracing]
-featured: true
+featured: false
 repo: https://github.com/X-Lucifer/rust-xserver
 demo:
 seoTitle: XServer Rust — Actix Web 静态文件服务器与双栈监听 | X.LUCIFER

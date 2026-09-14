@@ -32,4 +32,11 @@
   <url>
     <loc>https://xlucifer.top/software/x-webdav-server/</loc>
   </url>
+  <url>
+    <loc>https://xlucifer.top/software/x-xray/</loc>
+    <image:image><image:loc>https://xlucifer.top/previews/x-xray/overview-dark.png</image:loc></image:image>
+    <image:image><image:loc>https://xlucifer.top/previews/x-xray/overview-light.png</image:loc></image:image>
+    <image:image><image:loc>https://xlucifer.top/previews/x-xray/profiles-light.png</image:loc></image:image>
+    <image:image><image:loc>https://xlucifer.top/previews/x-xray/routing-ordered-dark.png</image:loc></image:image>
+  </url>
 </urlset>
