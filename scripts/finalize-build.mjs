@@ -31,8 +31,8 @@ const styles = new Map(await Promise.all(assets.filter(asset => asset.endsWith('
 
 function inlinePageStyles(html, assetPrefix) {
   // SSG knows exactly which styles each page needs. Inline that page's CSS so
-  // reading never waits for a second network round trip; warm the normal cached
-  // stylesheets asynchronously for subsequent client-side navigation.
+  // reading never waits for a second network round trip. Keep the normal links
+  // for Vite's CSS deduplication and cache warming without applying them twice.
   const previousStyles = new Set()
   const withoutGeneratedStyles = html.replace(/<style\b(?:[^"'<>]|"[^"]*"|'[^']*')*>[\s\S]*?<\/style>/gi, style => {
     const name = attribute(style.match(/^<style\b(?:[^"'<>]|"[^"]*"|'[^']*')*>/i)[0], 'data-page-styles')
@@ -61,8 +61,8 @@ function inlinePageStyles(html, assetPrefix) {
     let cached = setAttribute(link, 'data-page-style-cache', name)
     cached = setAttribute(cached, 'data-original-media', originalMedia)
     cached = setAttribute(cached, 'data-original-onload', originalOnload || undefined)
-    cached = setAttribute(cached, 'media', 'print')
-    cached = setAttribute(cached, 'onload', `this.onload=null;this.media=this.dataset.originalMedia;${originalOnload}`)
+    cached = setAttribute(cached, 'media', 'not all')
+    cached = setAttribute(cached, 'onload', originalOnload ? `this.onload=null;${originalOnload}` : undefined)
     const media = originalMedia === 'all' ? '' : ` media="${escapeAttribute(originalMedia)}"`
     return `<style data-page-styles="${escapeAttribute(name)}"${media}>${inlined}</style>${cached}`
   })

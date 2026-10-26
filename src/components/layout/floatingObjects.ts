@@ -1,9 +1,11 @@
 import * as THREE from 'three'
+import { yieldSceneTask } from '../scenePreparation'
 
 type Uniforms = Record<string, THREE.IUniform>
 
 /** One surface pass and one wire pass, regardless of the number of objects. */
-export function createFloatingObjects(interaction: Uniforms, fieldShader: string, compact: boolean) {
+export async function createFloatingObjects(interaction: Uniforms, fieldShader: string, compact: boolean, signal?: AbortSignal) {
+  if (signal?.aborted) throw new DOMException('Scene preparation aborted', 'AbortError')
   const resources: { dispose(): void }[] = []
   const own = <T extends { dispose(): void }>(resource: T): T => { resources.push(resource); return resource }
   const group = new THREE.Group()
@@ -20,6 +22,7 @@ export function createFloatingObjects(interaction: Uniforms, fieldShader: string
   // Stratified positions avoid empty quadrants while keeping each visit distinct.
   const frameCount = compact ? 26 : 48
   const solidCount = compact ? 10 : 20
+  let batchStarted = performance.now()
   for (let i = 0; i < frameCount + solidCount; i++) {
     const frame = i < frameCount
     const index = frame ? i : i - frameCount
@@ -68,6 +71,11 @@ export function createFloatingObjects(interaction: Uniforms, fieldShader: string
       if (faces !== geometry) faces.dispose()
     }
     geometry.dispose()
+    // Yield after releasing temporary geometry, without changing the random sequence.
+    if (performance.now() - batchStarted >= 4) {
+      await yieldSceneTask(signal)
+      batchStarted = performance.now()
+    }
   }
 
   function buffer(data: typeof wireData) {

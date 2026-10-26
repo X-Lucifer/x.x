@@ -77,7 +77,7 @@ export function createSpatialField(host: HTMLElement) {
   let stopTheme: (() => void) | undefined
   let renderWidth = 0
   let renderHeight = 0
-  let floatingObjects: ReturnType<typeof createFloatingObjects> | undefined
+  let floatingObjects: Awaited<ReturnType<typeof createFloatingObjects>> | undefined
   let matrixGeometry: THREE.BufferGeometry | undefined
   let matrixPositions: THREE.BufferAttribute | undefined
   const matrixScale = { value: 1 }
@@ -196,7 +196,12 @@ export function createSpatialField(host: HTMLElement) {
 
       await yieldSceneTask(preparation.signal)
       const wireMaterial = own(new THREE.LineBasicMaterial({ color: 0x50c889, transparent: true, opacity: 0.16 }))
-      floatingObjects = own(createFloatingObjects(interaction, fieldShader, matchMedia('(pointer: coarse), (max-width: 700px)').matches))
+      const created = await createFloatingObjects(interaction, fieldShader, matchMedia('(pointer: coarse), (max-width: 700px)').matches, preparation.signal)
+      if (disposed || preparation.signal.aborted) {
+        created.dispose()
+        throw new DOMException('Scene preparation aborted', 'AbortError')
+      }
+      floatingObjects = own(created)
       world.add(floatingObjects.group)
 
       await yieldSceneTask(preparation.signal)
