@@ -2,16 +2,20 @@ import * as THREE from 'three'
 import { observeTheme } from '../../composables/useTheme'
 import { createSpatialGrid } from './spatialGeometry'
 import { createFloatingObjects } from './floatingObjects'
+import { prepareScene, yieldSceneTask } from '../scenePreparation'
 
 /** A persistent, low-resolution world shared by every route. */
 export function createSpatialField(host: HTMLElement) {
-  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false, powerPreference: 'high-performance' })
+  let renderer: THREE.WebGLRenderer
+  let canvas: HTMLCanvasElement
   const scene = new THREE.Scene()
   const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 70)
   camera.position.set(0, 1.3, 8)
   const world = new THREE.Group()
   scene.add(world)
   let disposed = false
+  let prepared = false
+  const preparation = new AbortController()
   let frame = 0
   let previous = 0
   let time = 0
@@ -69,9 +73,6 @@ export function createSpatialField(host: HTMLElement) {
   const motion = matchMedia('(prefers-reduced-motion: reduce)')
   const resources: { dispose(): void }[] = []
   const own = <T extends { dispose(): void }>(resource: T): T => { resources.push(resource); return resource }
-  const canvas = renderer.domElement
-  canvas.setAttribute('aria-hidden', 'true')
-  renderer.setClearColor(0x000000, 0)
   let resizeObserver: ResizeObserver | undefined
   let stopTheme: (() => void) | undefined
   let renderWidth = 0
@@ -120,6 +121,7 @@ export function createSpatialField(host: HTMLElement) {
   function dispose() {
     if (disposed) return
     disposed = true
+    preparation.abort()
     cancelAnimationFrame(frame)
     resizeObserver?.disconnect()
     stopTheme?.()
@@ -131,115 +133,130 @@ export function createSpatialField(host: HTMLElement) {
     window.removeEventListener('blur', pointerLeave)
     document.removeEventListener('visibilitychange', sync)
     motion.removeEventListener('change', sync)
-    canvas.removeEventListener('webglcontextlost', contextLost)
+    canvas?.removeEventListener('webglcontextlost', contextLost)
     resources.forEach(resource => resource.dispose())
-    renderer.dispose()
-    renderer.forceContextLoss()
-    canvas.remove()
+    renderer?.dispose()
+    renderer?.forceContextLoss()
+    canvas?.remove()
   }
 
-  try {
-    const grid = createSpatialGrid()
-    const gridGeometry = own(new THREE.BufferGeometry())
-    gridGeometry.setAttribute('position', new THREE.BufferAttribute(grid.positions, 3))
-    gridGeometry.setIndex(new THREE.BufferAttribute(grid.indices, 1))
-    world.add(new THREE.LineSegments(gridGeometry, gridMaterial))
+  async function initialize() {
+    try {
+      await yieldSceneTask(preparation.signal)
+      renderer = new THREE.WebGLRenderer({ alpha: true, antialias: false, powerPreference: 'high-performance' })
+      canvas = renderer.domElement
+      canvas.setAttribute('aria-hidden', 'true')
+      canvas.addEventListener('webglcontextlost', contextLost)
+      renderer.setClearColor(0x000000, 0)
+      await yieldSceneTask(preparation.signal)
+      const grid = createSpatialGrid()
+      const gridGeometry = own(new THREE.BufferGeometry())
+      gridGeometry.setAttribute('position', new THREE.BufferAttribute(grid.positions, 3))
+      gridGeometry.setIndex(new THREE.BufferAttribute(grid.indices, 1))
+      world.add(new THREE.LineSegments(gridGeometry, gridMaterial))
 
-    matrixGeometry = own(new THREE.BufferGeometry())
-    matrixGeometry.setAttribute('position', new THREE.Float32BufferAttribute([], 3))
-    const matrixMaterial = own(new THREE.ShaderMaterial({
-      transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
-      uniforms: { ...interaction, uScale: matrixScale },
-      vertexShader: `
-        ${fieldShader}
-        uniform float uScale;
-        varying float vLight;
-        varying float vAlpha;
-        void main() {
-          vec2 p = position.xy;
-          vec2 field = fieldAt(p);
-          vec2 offset = (p - uPointer) * vec2(uAspect, 1.0);
-          p += normalize(offset + 0.0001) / vec2(uAspect, 1.0) * field.x * (0.012 + uSpeed * 0.012);
-          vLight = min(1.0, field.x * 0.8 + field.y);
-          float breathe = 0.5 + 0.5 * sin(position.x * 12.0 + position.y * 7.0 + uTime * 0.3);
-          vAlpha = 0.028 + breathe * 0.02 + vLight * 0.7;
-          gl_Position = vec4(p, 0.99, 1.0);
-          gl_PointSize = (1.3 + vLight * 3.1) * uScale;
+      matrixGeometry = own(new THREE.BufferGeometry())
+      matrixGeometry.setAttribute('position', new THREE.Float32BufferAttribute([], 3))
+      const matrixMaterial = own(new THREE.ShaderMaterial({
+        transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
+        uniforms: { ...interaction, uScale: matrixScale },
+        vertexShader: `
+          ${fieldShader}
+          uniform float uScale;
+          varying float vLight;
+          varying float vAlpha;
+          void main() {
+            vec2 p = position.xy;
+            vec2 field = fieldAt(p);
+            vec2 offset = (p - uPointer) * vec2(uAspect, 1.0);
+            p += normalize(offset + 0.0001) / vec2(uAspect, 1.0) * field.x * (0.012 + uSpeed * 0.012);
+            vLight = min(1.0, field.x * 0.8 + field.y);
+            float breathe = 0.5 + 0.5 * sin(position.x * 12.0 + position.y * 7.0 + uTime * 0.3);
+            vAlpha = 0.028 + breathe * 0.02 + vLight * 0.7;
+            gl_Position = vec4(p, 0.99, 1.0);
+            gl_PointSize = (1.3 + vLight * 3.1) * uScale;
+          }
+        `,
+        fragmentShader: `
+          uniform float uLightMode;
+          varying float vLight;
+          varying float vAlpha;
+          void main() {
+            float d = length(gl_PointCoord - 0.5);
+            float point = 1.0 - smoothstep(0.12, 0.5, d);
+            vec3 color = mix(vec3(0.2, 0.6, 0.4), vec3(0.64, 1.0, 0.83), vLight);
+            color = mix(color, vec3(0.12, 0.38, 0.25), uLightMode);
+            gl_FragColor = vec4(color, point * vAlpha * mix(1.0, 0.65, uLightMode));
+          }
+        `,
+      }))
+      const matrix = new THREE.Points(matrixGeometry, matrixMaterial)
+      matrix.frustumCulled = false
+      scene.add(matrix)
+
+      await yieldSceneTask(preparation.signal)
+      const wireMaterial = own(new THREE.LineBasicMaterial({ color: 0x50c889, transparent: true, opacity: 0.16 }))
+      floatingObjects = own(createFloatingObjects(interaction, fieldShader, matchMedia('(pointer: coarse), (max-width: 700px)').matches))
+      world.add(floatingObjects.group)
+
+      await yieldSceneTask(preparation.signal)
+      const points: number[] = []
+      const connections: number[] = []
+      // Deterministic constellations stay in the margins of the reading plane.
+      for (const side of [-1, 1]) {
+        for (let i = 0; i < 60; i++) {
+          const x = side * (5 + Math.sin(i * 13.17) ** 2 * 11)
+          const y = -1 + (Math.sin(i * 7.31) + 1) * 6
+          const z = -1 - (i % 12) * 2.3
+          points.push(x, y, z)
+          if (i % 3 === 0) connections.push(x, y, z, x + side * 0.6, y + 0.4, z - 1)
         }
-      `,
-      fragmentShader: `
-        uniform float uLightMode;
-        varying float vLight;
-        varying float vAlpha;
-        void main() {
-          float d = length(gl_PointCoord - 0.5);
-          float point = 1.0 - smoothstep(0.12, 0.5, d);
-          vec3 color = mix(vec3(0.2, 0.6, 0.4), vec3(0.64, 1.0, 0.83), vLight);
-          color = mix(color, vec3(0.12, 0.38, 0.25), uLightMode);
-          gl_FragColor = vec4(color, point * vAlpha * mix(1.0, 0.65, uLightMode));
-        }
-      `,
-    }))
-    const matrix = new THREE.Points(matrixGeometry, matrixMaterial)
-    matrix.frustumCulled = false
-    scene.add(matrix)
-
-    const wireMaterial = own(new THREE.LineBasicMaterial({ color: 0x50c889, transparent: true, opacity: 0.16 }))
-    floatingObjects = own(createFloatingObjects(interaction, fieldShader, matchMedia('(pointer: coarse), (max-width: 700px)').matches))
-    world.add(floatingObjects.group)
-
-    const points: number[] = []
-    const connections: number[] = []
-    // Deterministic constellations stay in the margins of the reading plane.
-    for (const side of [-1, 1]) {
-      for (let i = 0; i < 60; i++) {
-        const x = side * (5 + Math.sin(i * 13.17) ** 2 * 11)
-        const y = -1 + (Math.sin(i * 7.31) + 1) * 6
-        const z = -1 - (i % 12) * 2.3
-        points.push(x, y, z)
-        if (i % 3 === 0) connections.push(x, y, z, x + side * 0.6, y + 0.4, z - 1)
       }
+      const pointGeometry = own(new THREE.BufferGeometry())
+      pointGeometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3))
+      const pointMaterial = own(new THREE.PointsMaterial({ color: 0x9cffc6, size: 0.035, transparent: true, opacity: 0.42, depthWrite: false }))
+      world.add(new THREE.Points(pointGeometry, pointMaterial))
+      const connectionGeometry = own(new THREE.BufferGeometry())
+      connectionGeometry.setAttribute('position', new THREE.Float32BufferAttribute(connections, 3))
+      world.add(new THREE.LineSegments(connectionGeometry, wireMaterial))
+      // Motion is encoded in shaders; these local transforms never change.
+      world.traverse(object => { object.updateMatrix(); object.matrixAutoUpdate = false })
+      matrix.updateMatrix()
+      matrix.matrixAutoUpdate = false
+
+      stopTheme = observeTheme(theme => {
+        const light = theme === 'light'
+        gridMaterial.uniforms.uLightMode!.value = light ? 1 : 0
+        gridMaterial.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending
+        matrixMaterial.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending
+        wireMaterial.color.set(light ? 0x42634e : 0x50c889)
+        wireMaterial.opacity = light ? 0.2 : 0.16
+        pointMaterial.color.set(light ? 0x366247 : 0x9cffc6)
+        // The first draw waits for the viewport and shader preparation; later
+        // theme changes update the existing scene immediately.
+        if (prepared && renderWidth && renderHeight) render(0)
+      })
+
+      host.append(canvas)
+      document.addEventListener('pointermove', pointerMove, { passive: true })
+      document.addEventListener('pointerdown', pointerDown, { passive: true })
+      document.addEventListener('pointerleave', pointerLeave)
+      document.addEventListener('pointerup', pointerUp, { passive: true })
+      document.addEventListener('pointercancel', pointerUp, { passive: true })
+      window.addEventListener('blur', pointerLeave)
+      document.addEventListener('visibilitychange', sync)
+      motion.addEventListener('change', sync)
+      resizeObserver = new ResizeObserver(resize)
+      resizeObserver.observe(host)
+      resize()
+      await prepareScene(renderer, scene, camera, preparation.signal)
+      prepared = true
+      render(1)
+      sync()
+    } catch (error) {
+      dispose()
+      throw error
     }
-    const pointGeometry = own(new THREE.BufferGeometry())
-    pointGeometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3))
-    const pointMaterial = own(new THREE.PointsMaterial({ color: 0x9cffc6, size: 0.035, transparent: true, opacity: 0.42, depthWrite: false }))
-    world.add(new THREE.Points(pointGeometry, pointMaterial))
-    const connectionGeometry = own(new THREE.BufferGeometry())
-    connectionGeometry.setAttribute('position', new THREE.Float32BufferAttribute(connections, 3))
-    world.add(new THREE.LineSegments(connectionGeometry, wireMaterial))
-    // Motion is encoded in shaders; these local transforms never change.
-    world.traverse(object => { object.updateMatrix(); object.matrixAutoUpdate = false })
-    matrix.updateMatrix()
-    matrix.matrixAutoUpdate = false
-
-    stopTheme = observeTheme(theme => {
-      const light = theme === 'light'
-      gridMaterial.uniforms.uLightMode!.value = light ? 1 : 0
-      gridMaterial.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending
-      matrixMaterial.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending
-      wireMaterial.color.set(light ? 0x42634e : 0x50c889)
-      wireMaterial.opacity = light ? 0.2 : 0.16
-      pointMaterial.color.set(light ? 0x366247 : 0x9cffc6)
-      render(0)
-    })
-
-    host.append(canvas)
-    document.addEventListener('pointermove', pointerMove, { passive: true })
-    document.addEventListener('pointerdown', pointerDown, { passive: true })
-    document.addEventListener('pointerleave', pointerLeave)
-    document.addEventListener('pointerup', pointerUp, { passive: true })
-    document.addEventListener('pointercancel', pointerUp, { passive: true })
-    window.addEventListener('blur', pointerLeave)
-    document.addEventListener('visibilitychange', sync)
-    motion.addEventListener('change', sync)
-    canvas.addEventListener('webglcontextlost', contextLost)
-    resizeObserver = new ResizeObserver(resize)
-    resizeObserver.observe(host)
-    resize()
-    sync()
-  } catch (error) {
-    dispose()
-    throw error
   }
 
   function render(delta: number) {
@@ -262,7 +279,7 @@ export function createSpatialField(host: HTMLElement) {
 
   function animate(now: number) {
     frame = 0
-    if (disposed || document.hidden || motion.matches) return
+    if (disposed || !prepared || document.hidden || motion.matches) return
     // Use the display cadence, including 90/120/144 Hz, without fractional skips.
     const delta = Math.min(Math.max((now - previous) / 1000, 0), 0.05)
     previous = now
@@ -311,7 +328,7 @@ export function createSpatialField(host: HTMLElement) {
     matrixPositions.clearUpdateRanges()
     matrixPositions.addUpdateRange(0, count * 3)
     matrixPositions.needsUpdate = true
-    render(1)
+    if (prepared) render(1)
   }
 
   function pointerMove(event: PointerEvent) {
@@ -354,7 +371,7 @@ export function createSpatialField(host: HTMLElement) {
   function sync() {
     cancelAnimationFrame(frame)
     frame = 0
-    if (disposed || document.hidden) return
+    if (disposed || !prepared || document.hidden) return
     if (motion.matches) {
       pointerLeave()
       interaction.uPresence.value = interaction.uSpeed.value = 0
@@ -370,5 +387,5 @@ export function createSpatialField(host: HTMLElement) {
     dispose()
   }
 
-  return { dispose }
+  return { dispose, ready: initialize() }
 }

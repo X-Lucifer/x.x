@@ -9,8 +9,11 @@ onMounted(async () => {
     const { createSpatialField } = await import('./spatialField')
     if (!alive || !field.value) return
     world = createSpatialField(field.value)
+    await world.ready
   } catch (error) {
-    console.warn('[Spatial field] Static background is active.', error)
+    if (alive && !(error instanceof DOMException && error.name === 'AbortError')) {
+      console.warn('[Spatial field] Static background is active.', error)
+    }
   }
 })
 onUnmounted(() => { alive = false; world?.dispose() })

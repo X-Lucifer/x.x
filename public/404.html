@@ -7,6 +7,14 @@
     <meta name="color-scheme" content="dark" />
     <meta name="theme-color" content="#070a08" />
     <title>页面未找到 | X.LUCIFER</title>
+    <script>
+      const basePath = location.pathname === '/x.x' || location.pathname.startsWith('/x.x/')
+        ? '/x.x/'
+        : '/'
+      const assetBase = document.createElement('base')
+      assetBase.href = basePath
+      document.head.append(assetBase)
+    </script>
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="manifest" href="./site.webmanifest" />
@@ -33,9 +41,6 @@
       </nav>
     </main>
     <script>
-      const basePath = location.pathname === '/x.x' || location.pathname.startsWith('/x.x/')
-        ? '/x.x/'
-        : '/'
       document.querySelector('#home-link').href = basePath
       document.querySelector('#software-link').href = basePath + 'software/'
     </script>

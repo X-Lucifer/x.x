@@ -1,4 +1,5 @@
-import { readFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import { readFile, stat } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import MarkdownIt from 'markdown-it'
 import type Token from 'markdown-it/lib/token.mjs'
@@ -67,6 +68,14 @@ function addHeadings(tokens: Token[], detail: SoftwareDetailMetadata) {
 /** Keep the Markdown parser and source text entirely in the build/dev process. */
 export function softwareMarkdown(): Plugin {
   const markdown = new MarkdownIt({ html: false, linkify: true, typographer: true })
+  const renderImage = markdown.renderer.rules.image!
+  markdown.renderer.rules.image = (tokens, index, options, env, renderer) => {
+    const image = renderImage(tokens, index, options, env, renderer)
+    const preview = tokens[index]!.meta?.optimizedPreview as string | undefined
+    return preview
+      ? `<picture><source type="image/webp" srcset="${markdown.utils.escapeHtml(preview)}">${image}</picture>`
+      : image
+  }
   let publicDirectory = resolve('public')
   return {
     name: 'software-markdown',
@@ -111,6 +120,19 @@ export function softwareMarkdown(): Plugin {
         token.attrSet('width', String(width))
         token.attrSet('height', String(height))
         detail.screenshots.push({ path, alt: token.content, width, height })
+        // The source digest prevents an edited PNG from serving an outdated
+        // optimized sibling. Original PNGs remain the SEO and browser fallback.
+        const digest = createHash('sha256').update(png).digest('hex').slice(0, 12)
+        const optimizedSrc = src.replace(/\.png$/, `.${digest}.webp`)
+        const optimizedPath = resolve(publicDirectory, optimizedSrc.slice('../../'.length))
+        this.addWatchFile(optimizedPath)
+        const optimized = await stat(optimizedPath).catch((error: NodeJS.ErrnoException) => {
+          if (error.code !== 'ENOENT') throw error
+          return undefined
+        })
+        if (optimized?.isFile() && optimized.size < png.length) {
+          token.meta = { ...token.meta, optimizedPreview: optimizedSrc }
+        }
       }
       const value = query.has('software-seo') ? detail : markdown.renderer.render(tokens, markdown.options, {})
       return { code: `export default ${JSON.stringify(value)}`, map: null }

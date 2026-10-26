@@ -7,6 +7,10 @@ export default defineConfig(({ command }) => {
     base: command === 'build' ? './' : '/',
     plugins: [softwareMarkdown(), vue()],
     build: {
+      // Current Chromium, Gecko and WebKit support these natively; no legacy
+      // module-preload observer or IE compatibility bundle is needed.
+      target: 'es2022',
+      modulePreload: { polyfill: false },
       rolldownOptions: {
         output: {
           codeSplitting: {

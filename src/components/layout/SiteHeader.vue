@@ -28,7 +28,7 @@ watch(
 <template>
   <header class="site-header">
     <div class="header-inner container">
-      <AppLink class="brand" to="/" aria-label="返回首页">
+      <AppLink class="brand" to="/">
         <span class="brand-logo" data-spatial="magnetic" data-depth="4">
           <UnicornLogo title="X.LUCIFER 独角兽标志" />
         </span>

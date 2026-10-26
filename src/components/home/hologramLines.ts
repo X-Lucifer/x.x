@@ -13,9 +13,9 @@ export function createHologramLines(surface: THREE.BufferGeometry) {
   const a = new THREE.Vector3()
   const b = new THREE.Vector3()
   const c = new THREE.Vector3()
-  const levels = [...new Set(Array.from({ length: positions.count }, (_, i) => positions.getZ(i)))].sort((x, y) => x - y)
-  const backDepth = levels[0]!
-  const frontDepth = levels.at(-1)!
+  surface.computeBoundingBox()
+  const backDepth = surface.boundingBox!.min.z
+  const frontDepth = surface.boundingBox!.max.z
   const contours = new Set([backDepth, frontDepth])
   const front = new Map<string, ContourNode>()
   const back = new Map<string, THREE.Vector3>()
@@ -67,7 +67,6 @@ export function createHologramLines(surface: THREE.BufferGeometry) {
   // Walk each separate silhouette (including holes) so connectors follow the
   // shape, never span its face or accidentally join separate horn/mane details.
   // Arc-length spacing avoids dense ribs where SVG curves have many samples.
-  surface.computeBoundingBox()
   const spacing = (surface.boundingBox!.max.y - surface.boundingBox!.min.y) * 0.07
   const visited = new Set<string>()
   const incoming = new THREE.Vector3()

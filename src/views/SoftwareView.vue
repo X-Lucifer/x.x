@@ -92,6 +92,7 @@ useSeo({
         :key="project.slug"
         :project="project"
         :index="index"
+        heading-tag="h2"
       />
     </div>
   </div>

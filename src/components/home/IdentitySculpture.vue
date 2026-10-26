@@ -28,8 +28,11 @@ onMounted(() => {
       const { createIdentityScene } = await import('./identityScene')
       if (!alive || !stage.value) return
       scene = createIdentityScene(stage.value, () => { status.value = 'fallback' })
+      await scene.ready
+      if (!alive) return
       status.value = 'ready'
     } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return
       if (alive) status.value = 'fallback'
       console.warn('[Identity scene] Static artwork is active.', error)
     }

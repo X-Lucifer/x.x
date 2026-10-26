@@ -4,10 +4,11 @@ import { ArrowUpRight } from '@lucide/vue'
 import AppLink from '../AppLink.vue'
 import type { SoftwareProject } from '../../types/software'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   project: SoftwareProject
   index: number
-}>()
+  headingTag?: 'h2' | 'h3'
+}>(), { headingTag: 'h3' })
 
 const sequence = String(props.index + 1).padStart(2, '0')
 const titleFit = computed(() =>
@@ -22,7 +23,6 @@ const titleFit = computed(() =>
     data-spatial
     :style="{ '--card-index': index, '--title-fit': titleFit }"
     :to="`/software/${project.slug}`"
-    :aria-label="`查看 ${project.title} 详情`"
   >
     <span class="card-light" aria-hidden="true"><span data-spatial-light /></span>
     <div class="card-topline">
@@ -49,7 +49,7 @@ const titleFit = computed(() =>
 
     <div class="card-copy">
       <div>
-        <h3>{{ project.title }}</h3>
+        <component :is="headingTag" class="card-title">{{ project.title }}</component>
         <p>{{ project.summary }}</p>
       </div>
       <ArrowUpRight class="card-arrow" :size="22" />
@@ -289,12 +289,12 @@ const titleFit = computed(() =>
   min-width: 0;
 }
 
-.card-copy h3,
+.card-title,
 .card-copy p {
   margin: 0;
 }
 
-.card-copy h3 {
+.card-title {
   color: var(--text-strong);
   font-size: 1.4rem;
   overflow-wrap: anywhere;
