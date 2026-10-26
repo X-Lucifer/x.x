@@ -119,4 +119,5 @@ await Promise.all([
   writeFile(join(publicDir, '404.html'), notFoundHtml),
 ])
 
-console.log(`Generated SEO files for ${urls.length} URLs and ${agentDocuments.size - 1} Markdown pages at ${siteUrl}`)
+const markdownPages = [...agentDocuments.keys()].filter(path => path.endsWith('index.md')).length
+console.log(`Generated SEO files for ${urls.length} URLs, ${markdownPages} Markdown pages and agent discovery resources at ${siteUrl}`)

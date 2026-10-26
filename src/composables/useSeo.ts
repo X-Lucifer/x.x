@@ -3,8 +3,7 @@ import { toValue, type MaybeRefOrGetter } from 'vue'
 import { useRouter } from 'vue-router'
 import { agentDiscoveryLinks } from '../data/agentDiscovery'
 import { siteConfig } from '../data/site'
-
-type StructuredData = Record<string, unknown>
+import { createSiteStructuredData, serializeStructuredData, type StructuredData } from '../data/structuredData'
 
 export interface SeoConfig {
   title: string
@@ -19,59 +18,11 @@ export interface SeoConfig {
 
 const fallbackSiteUrl = 'https://xlucifer.top/'
 
-export const siteUrl = ensureTrailingSlash(
+export const siteStructuredData = createSiteStructuredData(
   import.meta.env.VITE_SITE_URL || fallbackSiteUrl,
+  siteConfig,
 )
-
-function ensureTrailingSlash(value: string) {
-  return value.endsWith('/') ? value : `${value}/`
-}
-
-export function absoluteUrl(path = '/') {
-  const relativePath = path.replace(/^\/+/, '')
-  return new URL(relativePath, siteUrl).href
-}
-
-export function pageUrl(path = '/') {
-  const relativePath = path.replace(/^\/+|\/+$/g, '')
-  return relativePath ? absoluteUrl(`${relativePath}/`) : siteUrl
-}
-
-export function personSchema(): StructuredData {
-  return {
-    '@type': 'Person',
-    '@id': `${siteUrl}#person`,
-    name: siteConfig.name,
-    alternateName: siteConfig.brand,
-    description: siteConfig.description,
-    jobTitle: '全栈软件工程师',
-    url: siteUrl,
-    image: absoluteUrl('/apple-touch-icon.png'),
-    email: `mailto:${siteConfig.email}`,
-    sameAs: [siteConfig.github],
-    knowsAbout: [
-      '桌面客户端开发',
-      '服务端开发',
-      '开源软件',
-      'AI 图像处理',
-      'C#',
-      '.NET',
-      'Rust',
-      'Go',
-      'Vue',
-      'TypeScript',
-    ],
-  }
-}
-
-function asSchemaGraph(data: StructuredData | StructuredData[]) {
-  const graph = Array.isArray(data) ? data : [data]
-
-  return {
-    '@context': 'https://schema.org',
-    '@graph': graph,
-  }
-}
+export const { siteUrl, absoluteUrl, pageUrl } = siteStructuredData
 
 export function useSeo(config: MaybeRefOrGetter<SeoConfig>) {
   const router = useRouter()
@@ -79,8 +30,8 @@ export function useSeo(config: MaybeRefOrGetter<SeoConfig>) {
     const seo = toValue(config)
     const canonical = pageUrl(seo.path)
     const keywords = [...new Set(seo.keywords ?? siteConfig.defaultKeywords)]
-    const structuredData = seo.structuredData
-      ? asSchemaGraph(seo.structuredData)
+    const structuredData = seo.structuredData && !/\bnoindex\b/i.test(seo.robots ?? '')
+      ? serializeStructuredData(seo.structuredData)
       : undefined
     const socialImage = absoluteUrl(seo.image?.path ?? '/social-card.png')
     const socialImageAlt = seo.image?.alt ?? `${siteConfig.brand} 独角兽标志与软件工程作品站`
@@ -126,7 +77,7 @@ export function useSeo(config: MaybeRefOrGetter<SeoConfig>) {
             {
               type: 'application/ld+json',
               key: 'page-schema',
-              textContent: JSON.stringify(structuredData).replaceAll('<', '\\u003c'),
+              textContent: structuredData,
             },
           ]
         : [],

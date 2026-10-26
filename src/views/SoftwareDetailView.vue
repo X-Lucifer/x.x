@@ -3,7 +3,7 @@ import { ArrowUpRight, Code2 } from '@lucide/vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import AppLink from '../components/AppLink.vue'
-import { absoluteUrl, pageUrl, personSchema, siteUrl, useSeo } from '../composables/useSeo'
+import { siteStructuredData, useSeo } from '../composables/useSeo'
 import { getSoftwareBySlug } from '../data/software'
 import { getSoftwareContent } from '../data/softwareContent'
 import { getSoftwareSeo } from '../data/softwareSeo'
@@ -26,12 +26,7 @@ useSeo(() => {
   }
 
   const path = `/software/${currentProject.slug}`
-  const canonical = pageUrl(path)
   const { title, description } = metadata
-  const screenshots = metadata.screenshots.map(image => ({
-    '@type': 'ImageObject', url: absoluteUrl(image.path),
-    caption: image.alt, width: image.width, height: image.height,
-  }))
 
   return {
     title,
@@ -39,49 +34,7 @@ useSeo(() => {
     path,
     keywords: metadata.keywords,
     image: metadata.screenshots[0],
-    structuredData: [
-      personSchema(),
-      {
-        '@type': 'WebSite', '@id': `${siteUrl}#website`,
-        url: siteUrl, name: 'X.LUCIFER', inLanguage: 'zh-CN',
-        publisher: { '@id': `${siteUrl}#person` },
-      },
-      {
-        '@type': 'WebPage', '@id': `${canonical}#webpage`,
-        name: title, url: canonical, description, inLanguage: 'zh-CN',
-        isPartOf: { '@id': `${siteUrl}#website` },
-        mainEntity: { '@id': `${canonical}#software` },
-        breadcrumb: { '@id': `${canonical}#breadcrumb` },
-        ...(screenshots.length ? { primaryImageOfPage: screenshots[0] } : {}),
-      },
-      {
-        '@type': 'SoftwareApplication', '@id': `${canonical}#software`,
-        name: currentProject.title, url: canonical, description,
-        applicationCategory: metadata.applicationCategory,
-        operatingSystem: metadata.operatingSystems.join(', '),
-        featureList: metadata.features,
-        screenshot: screenshots.length ? screenshots : undefined,
-        sameAs: currentProject.repo,
-        author: { '@id': `${siteUrl}#person` },
-        mainEntityOfPage: { '@id': `${canonical}#webpage` },
-      },
-      {
-        '@type': 'SoftwareSourceCode', '@id': `${canonical}#source`,
-        name: currentProject.title, codeRepository: currentProject.repo,
-        programmingLanguage: metadata.programmingLanguages,
-        runtimePlatform: currentProject.stack.join(', '),
-        targetProduct: { '@id': `${canonical}#software` },
-        author: { '@id': `${siteUrl}#person` },
-      },
-      {
-        '@type': 'BreadcrumbList', '@id': `${canonical}#breadcrumb`,
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: '首页', item: siteUrl },
-          { '@type': 'ListItem', position: 2, name: '软件作品', item: pageUrl('/software') },
-          { '@type': 'ListItem', position: 3, name: currentProject.title, item: canonical },
-        ],
-      },
-    ],
+    structuredData: siteStructuredData.software(currentProject, metadata),
   }
 })
 </script>

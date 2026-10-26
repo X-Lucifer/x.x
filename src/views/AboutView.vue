@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ArrowUpRight, Code2, Mail, MapPin } from '@lucide/vue'
 import UnicornLogo from '../components/brand/UnicornLogo.vue'
-import { pageUrl, personSchema, siteUrl, useSeo } from '../composables/useSeo'
+import { siteStructuredData, useSeo } from '../composables/useSeo'
 import { siteConfig, technologyGroups } from '../data/site'
 
 const capabilities = [
@@ -20,19 +20,7 @@ useSeo({
   description,
   path: '/about',
   type: 'profile',
-  structuredData: [
-    personSchema(),
-    {
-      '@type': 'ProfilePage',
-      '@id': `${pageUrl('/about')}#profile`,
-      name: title,
-      url: pageUrl('/about'),
-      description,
-      inLanguage: 'zh-CN',
-      isPartOf: { '@id': `${siteUrl}#website` },
-      mainEntity: { '@id': `${siteUrl}#person` },
-    },
-  ],
+  structuredData: siteStructuredData.profile({ title, description }),
 })
 </script>
 

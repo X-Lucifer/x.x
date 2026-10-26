@@ -27,3 +27,5 @@ node_modules
 /.agents
 /dist.zip
 /.performance/
+/reports
+/tests

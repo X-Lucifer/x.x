@@ -1,0 +1,16 @@
+{
+  "entries": [
+    {
+      "identifier": "urn:air:xlucifer.top:skill:explore-projects",
+      "displayName": "探索 X.LUCIFER 开源项目",
+      "type": "text/markdown; profile=\"urn:air:agent-skills\"",
+      "url": "https://xlucifer.top/skills/explore-projects/SKILL.md",
+      "description": "发现、查询和比较 X.LUCIFER 的公开软件项目。当用户希望按用途或技术栈查找项目、阅读项目说明或比较已公开功能时使用；依据本站 Markdown 文档和源码链接回答。",
+      "representativeQueries": [
+        "X.LUCIFER 有哪些开源软件项目？",
+        "查找 X.LUCIFER 中符合指定用途或技术栈的项目，并提供说明和源码链接。",
+        "比较 X.LUCIFER 的两个项目在用途、技术栈和已公开功能上的区别。"
+      ]
+    }
+  ]
+}

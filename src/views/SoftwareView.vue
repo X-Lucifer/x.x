@@ -2,7 +2,7 @@
 import { computed, onMounted, shallowRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import SoftwareCard from '../components/software/SoftwareCard.vue'
-import { pageUrl, siteUrl, useSeo } from '../composables/useSeo'
+import { siteStructuredData, useSeo } from '../composables/useSeo'
 import { softwareProjects } from '../data/software'
 import { allSoftwareCategory, readSoftwareCategory, withSoftwareCategory } from '../data/softwareCategory'
 
@@ -31,7 +31,7 @@ const title = '开源软件作品 — 桌面应用、AI 图像处理与服务端
 const description =
   '浏览 X.LUCIFER 的开源软件作品，覆盖 AI 图像增强、Markdown 桌面客户端、静态资源服务以及 WebDAV、CalDAV、CardDAV 服务端。'
 
-useSeo({
+useSeo(() => ({
   title,
   description,
   path: '/software',
@@ -46,29 +46,8 @@ useSeo({
     '静态资源服务',
     ...softwareProjects.flatMap((project) => project.stack),
   ],
-  structuredData: [
-    {
-      '@type': 'CollectionPage',
-      '@id': `${pageUrl('/software')}#collection`,
-      name: title,
-      url: pageUrl('/software'),
-      description,
-      inLanguage: 'zh-CN',
-      isPartOf: { '@id': `${siteUrl}#website` },
-    },
-    {
-      '@type': 'ItemList',
-      name: 'X.LUCIFER 开源软件项目',
-      numberOfItems: softwareProjects.length,
-      itemListElement: softwareProjects.map((project, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        name: project.title,
-        url: pageUrl(`/software/${project.slug}`),
-      })),
-    },
-  ],
-})
+  structuredData: siteStructuredData.collection({ title, description }, visibleProjects.value),
+}))
 </script>
 
 <template>

@@ -117,6 +117,56 @@ function documentHeader(title, canonical, summary) {
   return `# ${escapeMarkdown(title)}\n\n原页面：${link(title, canonical)}\n\n${summary ? `> ${escapeMarkdown(summary)}\n\n` : ''}`
 }
 
+function createDiscoveryDocuments(siteConfig, siteUrl, projectLinks) {
+  const base = new URL(siteUrl)
+  if (!/^[a-z0-9.-]+$/i.test(base.hostname)) throw new Error('Agent discovery requires a domain hostname in VITE_SITE_URL')
+  // Keep identifiers distinct for sites published under the same domain.
+  const deployment = `${base.port ? `:port-${base.port}` : ''}${base.pathname === '/' ? '' : `:site-${Buffer.from(base.pathname).toString('hex')}`}`
+  const name = 'explore-projects'
+  const skillPath = `skills/${name}/SKILL.md`
+  const displayName = `探索 ${siteConfig.brand} 开源项目`
+  const description = `发现、查询和比较 ${siteConfig.brand} 的公开软件项目。当用户希望按用途或技术栈查找项目、阅读项目说明或比较已公开功能时使用；依据本站 Markdown 文档和源码链接回答。`
+  const entry = {
+    identifier: `urn:air:${base.hostname}${deployment}:skill:${name}`,
+    displayName,
+    type: 'text/markdown; profile="urn:air:agent-skills"',
+    url: new URL(skillPath, base).href,
+    description,
+  }
+  const representativeQueries = [
+    `${siteConfig.brand} 有哪些开源软件项目？`,
+    `查找 ${siteConfig.brand} 中符合指定用途或技术栈的项目，并提供说明和源码链接。`,
+    `比较 ${siteConfig.brand} 的两个项目在用途、技术栈和已公开功能上的区别。`,
+  ]
+  const skill = `---
+name: ${name}
+description: ${JSON.stringify(description)}
+---
+
+# ${escapeMarkdown(displayName)}
+
+帮助用户发现、查询和比较本站已公开的软件项目。所有步骤只读取公开资料。
+
+## 使用步骤
+
+1. 阅读 ${link('站点文档索引', new URL('llms.txt', base).href)} 和 ${link('软件作品目录', new URL('software/index.md', base).href)}，根据用户用途、项目分类或技术栈筛选候选项目。使用目录中的真实项目名称和 slug。
+2. 如果用户的浏览器或 agent 集成已在 ${link('本站页面', sitePageUrl(siteUrl, '/software'))} 提供原生 WebMCP 工具，可调用 \`list_projects({})\` 获取列表；仅在需要时以工具返回的精确分类传入 \`category\`，再用 \`get_project({"slug":"<列表返回的 slug>"})\` 读取选定项目。工具不可用或读取失败时，直接通过 HTTP 读取上述目录及下面对应的 Markdown 文档。本技能不提供远程 MCP 服务，也不要求安装浏览器兼容层。
+3. 只读取与问题相关的项目详情。核对正文中的用途、功能、使用边界、编程语言、运行平台与源码仓库；需要比较时，对各项目使用相同维度。文档未说明的项目明确标为“未说明”，不推断实测性能、兼容性或未公开功能。
+4. 回答中给出选中项目、与用户需求的对应关系，并链接文档中的原页面和源码仓库。涉及发布版本或安装方法时，以项目仓库的当前公开说明为依据；若未核实，明确说明。仅查询资料，不自动下载、运行软件或修改用户环境。
+
+## 项目文档
+
+按需打开相关项目，不必预先读取全部正文。
+
+${projectLinks.join('\n')}
+`
+  return new Map([
+    [skillPath, skill],
+    ['.well-known/ard.json', `${JSON.stringify({ entries: [{ ...entry, representativeQueries }] }, null, 2)}\n`],
+    ['.well-known/ai-catalog.json', `${JSON.stringify({ specVersion: '1.0', entries: [entry] }, null, 2)}\n`],
+  ])
+}
+
 export function createAgentDocuments({ documents, siteConfig, technologyGroups, siteUrl: configuredUrl }) {
   const siteUrl = normalizeSiteUrl(configuredUrl)
   const files = new Map()
@@ -149,6 +199,7 @@ export function createAgentDocuments({ documents, siteConfig, technologyGroups, 
     if (detail.features.length) metadata.push(`- 主要功能：${detail.features.map(escapeMarkdown).join('；')}`)
     files.set(`software/${project.slug}/index.md`, `${documentHeader(project.title, original, project.summary)}## 项目信息\n\n${metadata.join('\n')}\n\n${canonicalMarkdown(body, original, siteUrl)}\n`)
   }
+  for (const [path, content] of createDiscoveryDocuments(siteConfig, siteUrl, projectLinks)) files.set(path, content)
   return files
 }
 
@@ -157,7 +208,7 @@ async function optionalStat(path) {
 }
 
 async function safeGeneratedPath(publicDirectory, name) {
-  if (!/^(?:llms\.txt|index\.md|about\/index\.md|software\/(?:[a-z0-9]+(?:-[a-z0-9]+)*\/)?index\.md)$/.test(name)) {
+  if (!/^(?:llms\.txt|index\.md|about\/index\.md|software\/(?:[a-z0-9]+(?:-[a-z0-9]+)*\/)?index\.md|skills\/explore-projects\/SKILL\.md|\.well-known\/(?:ard|ai-catalog)\.json)$/.test(name)) {
     throw new Error(`Unsafe generated document path: ${name}`)
   }
   const root = resolve(publicDirectory)

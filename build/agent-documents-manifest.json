@@ -11,6 +11,9 @@
     "software/wails-obsidian-lite/index.md": "58bf34c46b03ce59b507a9f11b3b929873538f9c087cf761d57720fd086c44ff",
     "software/rust-xserver/index.md": "0097f3b3a27f185f45af76ae0034523b443215e0c0f586e3a8ee89a5893e9622",
     "software/go-xserver/index.md": "d2b67eba1f989e1e3fed6e4988f2cadbd4f53bb2776c7af68760976062a8b75b",
-    "software/x-webdav-server/index.md": "3f4b2b974b1de243ec6cdd3c068453a67cf3513cf1392b3d91f179bc744694ec"
+    "software/x-webdav-server/index.md": "3f4b2b974b1de243ec6cdd3c068453a67cf3513cf1392b3d91f179bc744694ec",
+    "skills/explore-projects/SKILL.md": "05409229f09a629820e5dfb6daf783935105119852914ef7ca93a38a1839064a",
+    ".well-known/ard.json": "da3adf1dd699ff521165392dd6982b74fb71a96c363de724793871216f8c48eb",
+    ".well-known/ai-catalog.json": "cb0b2944324bb4509eefdb7639b98fbadefc1534892b5dc93068beae10763d38"
   }
 }

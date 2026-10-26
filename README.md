@@ -22,6 +22,8 @@ pnpm preview
 - `sitemap.txt`：每行一个绝对 URL 的纯文本 Sitemap
 - `robots.txt`：爬虫规则和 Sitemap 地址
 - `llms.txt`：面向 AI 的简短内容索引
+- `.well-known/ard.json`、`.well-known/ai-catalog.json`：新版 ARD 与兼容目录发现入口
+- `skills/explore-projects/SKILL.md`：项目发现、查询和比较的只读 Agent Skill
 - `index.md`、`about/index.md`、`software/index.md` 和 `software/<slug>/index.md`：公开 Markdown 内容入口
 - `404.html`：GitHub Pages 自定义 404
 - `.nojekyll`：关闭 GitHub Pages 的 Jekyll 处理
@@ -116,6 +118,8 @@ TDK 和结构化数据分别在页面组件中通过 `src/composables/useSeo.ts`
 
 详情页包含独立标题与描述、canonical、Open Graph／Twitter Card，以及相互关联的 WebPage、SoftwareApplication、SoftwareSourceCode、作者和 BreadcrumbList。章节目录与面包屑使用真实链接，项目用途、功能、安装条件与已知边界均可在正文中读取。编程语言与框架分别标注；不使用年份冒充完整发布时间，也不生成虚构评分、评论或价格。
 
+JSON-LD 通过 `src/data/structuredData.ts` 的纯函数统一生成，首页、关于页、列表和详情页都包含本页可解析的 Person / WebSite 引用；列表的 ItemList 与可见项目顺序和数量一致，详情关联源码、真实截图和面包屑。人物信息不使用站点图标冒充个人照片，运行平台来自项目明确声明的平台字段。404 与 noindex 页面不输出该标记。Lighthouse 的“结构化数据有效”属于人工检查，不直接计入 SEO 分；Schema.org 语法正确也不保证获得 Google 软件富结果资格。参考 [Chrome 结构化数据说明](https://developer.chrome.com/docs/lighthouse/seo/structured-data?hl=zh-cn)。
+
 `robots.txt` 允许通用爬虫访问，已覆盖 OAI-SearchBot。上线后仍需检查 CDN／WAF 是否拦截爬虫，并在搜索站长工具中检查抓取结果、提交 Sitemap。本地验证不能代替真实收录检查。
 
 AI 搜索优化遵循可抓取、内容准确和结构清晰的原则。Google 不要求专用 AI 标记或 `llms.txt`，这些文件也不是其排名信号；OpenAI 的搜索爬虫与训练爬虫配置相互独立。参考 [Google AI 搜索指南](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide) 和 [OpenAI 爬虫说明](https://developers.openai.com/api/docs/bots)。当前结构化数据用于准确描述项目，未具备真实评分等条件时不承诺软件富媒体搜索结果。
@@ -149,6 +153,18 @@ WebMCP 仍处于实验阶段。可在专用测试 Chrome 中启用 `chrome://fla
 Agentic Browsing 采用检查通过比例，具体项目会随 Lighthouse 版本变化。`llms.txt` 是内容发现提案，`llms-full.txt` 不是本站必需文件；抓取规则继续由 `robots.txt` 管理。这些入口不保证搜索收录、AI 引用或排名。参考 [llms.txt v2](https://llmstxt.org/)、[WebMCP 接入说明](https://developer.chrome.com/docs/ai/webmcp) 与 [Lighthouse 智能体浏览评分](https://developer.chrome.com/docs/lighthouse/agentic-browsing/scoring)。
 
 本地 Chrome 原生工具调用、页面回归与 Lighthouse Agentic Browsing 审计结果见 [AI 内容入口与 WebMCP 验证](reports/agentic/README.md)。
+
+## ARD 与 AI Catalog
+
+构建时同时生成 `.well-known/ard.json` 与 `.well-known/ai-catalog.json`，有效页面分别通过 `rel="ard"` 和 `rel="ai-catalog"` 声明地址。根目录部署可通过标准 well-known 路径发现；`/x.x/` 子目录部署通过页面链接发现对应目录内的文件。这些链接无需在普通访问时下载目录内容。
+
+ARD 当前 v0.91 与独立 AI Catalog 的容器约定不同，项目分别生成二者。两个目录描述同一份真实的 `explore-projects` Agent Skill，使用规范认可的 `text/markdown; profile="urn:air:agent-skills"` 类型；ARD 额外提供 3 条代表查询。Skill 从现有项目数据生成，只说明如何按需使用公开 Markdown 与已注册的 WebMCP 查询工具。
+
+独立 Catalog 遵守其规范性 CDDL，扩展字段不直接放入条目顶层。本机 Brave 内置 Lighthouse 13.5 仍读取旧 Catalog 并提示缺少顶层 `representativeQueries`；新版 ARD 文件已包含查询。这条旧版审计提示与实际结构校验分别记录，不能为了消除提示而混淆两个规范。
+
+现有域名以 `VITE_SITE_URL` 生成资源 URL 和稳定 URN。该目录用于发现，不声明远程 MCP/A2A 服务、注册中心或已验证的身份认证；新增文件仍由非公开生成清单管理，不向公开文档写入生成注释。部署后应确认服务器允许读取 `.well-known/`、JSON 和 Skill Markdown。
+
+规范与本轮验证见 [ARD v0.91](https://agenticresourcediscovery.org/spec/)、[AI Catalog](https://ai-catalog.io/spec/)、[Agent Skills](https://agentskills.io/specification) 和 [目录发现及结构化数据验证](reports/discovery/README.md)。
 
 ## 部署到 GitHub Pages
 

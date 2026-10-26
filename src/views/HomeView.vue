@@ -3,7 +3,7 @@ import { ArrowRight } from '@lucide/vue'
 import AppLink from '../components/AppLink.vue'
 import SignalHero from '../components/home/SignalHero.vue'
 import SoftwareCard from '../components/software/SoftwareCard.vue'
-import { absoluteUrl, personSchema, siteUrl, useSeo } from '../composables/useSeo'
+import { siteStructuredData, useSeo } from '../composables/useSeo'
 import { siteConfig } from '../data/site'
 import { technologyGroups } from '../data/site'
 import { featuredProjects } from '../data/software'
@@ -14,35 +14,7 @@ useSeo({
   title,
   description: siteConfig.description,
   path: '/',
-  structuredData: [
-    personSchema(),
-    {
-      '@type': 'WebSite',
-      '@id': `${siteUrl}#website`,
-      name: siteConfig.brand,
-      alternateName: `${siteConfig.name} 的开源软件作品站`,
-      url: siteUrl,
-      description: siteConfig.description,
-      inLanguage: 'zh-CN',
-      publisher: { '@id': `${siteUrl}#person` },
-    },
-    {
-      '@type': 'WebPage',
-      '@id': `${siteUrl}#webpage`,
-      name: title,
-      url: siteUrl,
-      description: siteConfig.description,
-      inLanguage: 'zh-CN',
-      isPartOf: { '@id': `${siteUrl}#website` },
-      about: { '@id': `${siteUrl}#person` },
-      primaryImageOfPage: {
-        '@type': 'ImageObject',
-        url: absoluteUrl('/social-card.png'),
-        width: 1200,
-        height: 630,
-      },
-    },
-  ],
+  structuredData: siteStructuredData.home({ title, description: siteConfig.description }, featuredProjects),
 })
 </script>
 

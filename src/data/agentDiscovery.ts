@@ -12,5 +12,7 @@ export function agentDiscoveryLinks(path: string, routerBase?: string) {
   return [
     { key: 'agent-index', rel: 'describedby', type: 'text/plain', href: `${root}llms.txt` },
     { key: 'page-markdown', rel: 'alternate', type: 'text/markdown', href: markdown },
+    { key: 'ard-manifest', rel: 'ard', type: 'application/json', href: `${root}.well-known/ard.json` },
+    { key: 'ai-catalog-manifest', rel: 'ai-catalog', type: 'application/json', href: `${root}.well-known/ai-catalog.json` },
   ]
 }
