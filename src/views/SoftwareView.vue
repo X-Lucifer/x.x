@@ -1,16 +1,31 @@
 <script setup lang="ts">
-import { computed, shallowRef } from 'vue'
+import { computed, onMounted, shallowRef } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import SoftwareCard from '../components/software/SoftwareCard.vue'
 import { pageUrl, siteUrl, useSeo } from '../composables/useSeo'
 import { softwareProjects } from '../data/software'
+import { allSoftwareCategory, readSoftwareCategory, withSoftwareCategory } from '../data/softwareCategory'
 
-const activeCategory = shallowRef('全部')
-const categories = ['全部', ...new Set(softwareProjects.map((project) => project.category))]
+const route = useRoute()
+const router = useRouter()
+const categories = [allSoftwareCategory, ...new Set(softwareProjects.map((project) => project.category))]
+const mounted = shallowRef(false)
+// The generated HTML contains every project, including when the request has a query.
+onMounted(() => { mounted.value = true })
+const activeCategory = computed(() => mounted.value
+  ? readSoftwareCategory(route.query.category, categories)
+  : allSoftwareCategory,
+)
 const visibleProjects = computed(() =>
-  activeCategory.value === '全部'
+  activeCategory.value === allSoftwareCategory
     ? softwareProjects
     : softwareProjects.filter((project) => project.category === activeCategory.value),
 )
+
+function selectCategory(category: string) {
+  const query = withSoftwareCategory(route.query, category, categories)
+  if (query) void router.push({ path: route.path, query, hash: route.hash })
+}
 
 const title = '开源软件作品 — 桌面应用、AI 图像处理与服务端 | X.LUCIFER'
 const description =
@@ -70,7 +85,7 @@ useSeo({
     </header>
 
     <div class="software-toolbar">
-      <div class="filters" aria-label="按类型筛选">
+      <div class="filters" role="group" aria-label="按类型筛选">
         <button
           v-for="category in categories"
           :key="category"
@@ -78,12 +93,12 @@ useSeo({
           data-spatial="magnetic"
           :aria-pressed="activeCategory === category"
           :class="{ 'filter--active': activeCategory === category }"
-          @click="activeCategory = category"
+          @click="selectCategory(category)"
         >
           {{ category }}
         </button>
       </div>
-      <span class="result-count" data-depth="6">{{ visibleProjects.length.toString().padStart(2, '0') }} PROJECTS</span>
+      <span class="result-count" role="status" aria-atomic="true" data-depth="6">{{ visibleProjects.length.toString().padStart(2, '0') }} PROJECTS</span>
     </div>
 
     <div class="software-grid">

@@ -1,5 +1,7 @@
 import { useHead } from '@unhead/vue'
 import { toValue, type MaybeRefOrGetter } from 'vue'
+import { useRouter } from 'vue-router'
+import { agentDiscoveryLinks } from '../data/agentDiscovery'
 import { siteConfig } from '../data/site'
 
 type StructuredData = Record<string, unknown>
@@ -72,6 +74,7 @@ function asSchemaGraph(data: StructuredData | StructuredData[]) {
 }
 
 export function useSeo(config: MaybeRefOrGetter<SeoConfig>) {
+  const router = useRouter()
   useHead(() => {
     const seo = toValue(config)
     const canonical = pageUrl(seo.path)
@@ -90,6 +93,10 @@ export function useSeo(config: MaybeRefOrGetter<SeoConfig>) {
       link: [
         { rel: 'canonical', href: canonical },
         { rel: 'sitemap', type: 'application/xml', href: absoluteUrl('/sitemap.xml') },
+        ...(/\bnoindex\b/i.test(seo.robots ?? '') ? [] : agentDiscoveryLinks(
+          seo.path,
+          import.meta.env.SSR ? undefined : router.options.history.base,
+        )),
       ],
       meta: [
         { name: 'description', content: seo.description },

@@ -21,6 +21,8 @@ pnpm preview
 - `sitemap.xml`：标准 XML Sitemap
 - `sitemap.txt`：每行一个绝对 URL 的纯文本 Sitemap
 - `robots.txt`：爬虫规则和 Sitemap 地址
+- `llms.txt`：面向 AI 的简短内容索引
+- `index.md`、`about/index.md`、`software/index.md` 和 `software/<slug>/index.md`：公开 Markdown 内容入口
 - `404.html`：GitHub Pages 自定义 404
 - `.nojekyll`：关闭 GitHub Pages 的 Jekyll 处理
 
@@ -126,6 +128,27 @@ https://xlucifer.top/
 ```
 
 两个地址提供相同内容时，canonical、Sitemap 和 JSON-LD 会统一指向 `https://xlucifer.top/`，将自有域名作为 SEO 主站，避免搜索引擎把两个部署识别为互相竞争的重复页面。
+
+## AI 内容入口与 WebMCP
+
+`pnpm seo:generate` 和 `pnpm build` 会从 `src/data/site.ts` 与现有项目 Markdown 自动生成 `llms.txt` 和 Markdown 内容入口。软件详情保留完整正文、元数据和源码链接；首页与关于页是明确标注的页面摘要。图片和正文链接使用 `VITE_SITE_URL` 生成 canonical 绝对地址，不维护第二份项目介绍。开发时修改内容后重新运行生成命令即可更新这些静态文件。
+
+每个有效页面通过 `rel="describedby"` 声明 llms.txt，通过 `rel="alternate" type="text/markdown"` 声明该页的 Markdown。链接兼容根目录与 `/x.x/` 部署；404 页不声明不存在的 Markdown。生成文件的路径和摘要保存在构建清单中，公开文档不包含生成声明注释。新增或删除项目后，生成器会同步索引，并仅清理清单中未被手工修改的过期详情 Markdown，保留手写文件和截图。
+
+软件分类保存在 `?category=分类名` 中，支持分享、刷新和浏览器前进后退。选择“全部”会移除分类参数；其他查询参数和锚点保留。无效或重复的分类参数按“全部”展示，筛选按钮与结果数量提供对应的无障碍状态。
+
+页面在原生 `document.modelContext` 可用时注册两个只读 WebMCP 工具：
+
+- `list_projects({ category? })`：列出全部项目或指定分类，返回公开摘要、页面与源码链接。
+- `get_project({ slug })`：按需读取单个项目的已发布 Markdown；不改变页面或打开外部链接。
+
+参数依据实际分类、slug 和 JSON Schema 校验。注册复用同一浏览器上下文，路由切换不会重复注册；HMR 注销会清理工具。Markdown 仅在调用详情工具时获取，普通页面访问不会额外请求这些文档。不支持原生 API 的浏览器继续使用普通页面功能。
+
+WebMCP 仍处于实验阶段。可在专用测试 Chrome 中启用 `chrome://flags/#enable-webmcp-testing`，重启后通过 DevTools → Application → WebMCP 查看并执行工具。公开域名面向未启用测试开关的浏览器使用时，需要按 Chrome 官方流程配置有效 Origin Trial。
+
+Agentic Browsing 采用检查通过比例，具体项目会随 Lighthouse 版本变化。`llms.txt` 是内容发现提案，`llms-full.txt` 不是本站必需文件；抓取规则继续由 `robots.txt` 管理。这些入口不保证搜索收录、AI 引用或排名。参考 [llms.txt v2](https://llmstxt.org/)、[WebMCP 接入说明](https://developer.chrome.com/docs/ai/webmcp) 与 [Lighthouse 智能体浏览评分](https://developer.chrome.com/docs/lighthouse/agentic-browsing/scoring)。
+
+本地 Chrome 原生工具调用、页面回归与 Lighthouse Agentic Browsing 审计结果见 [AI 内容入口与 WebMCP 验证](reports/agentic/README.md)。
 
 ## 部署到 GitHub Pages
 

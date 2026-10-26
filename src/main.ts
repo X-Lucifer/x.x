@@ -5,6 +5,7 @@ import './style.css'
 import App from './App.vue'
 import { routerOptions } from './router'
 import { softwareProjects } from './data/software'
+import { registerSiteTools } from './agent/webmcp'
 
 function routerBase() {
   if (import.meta.env.SSR) return '/'
@@ -20,6 +21,14 @@ export const createApp = ViteSSG(App, {
   base: routerBase(),
 }, ({ router }) => {
   if (!import.meta.env.SSR) {
+    // Unhead identifies alternate links by type + href, ahead of explicit keys.
+    // Adopt the relative SSG link using the same deployment URL as client updates.
+    for (const link of document.querySelectorAll<HTMLLinkElement>('head link[rel="alternate"][type="text/markdown"]')) {
+      link.setAttribute('href', new URL(link.href).pathname)
+    }
+    void registerSiteTools().ready.catch(error => {
+      console.warn('WebMCP tools could not be registered', error)
+    })
     // Freeze the initial SSG asset URLs before client navigation changes the document path.
     for (const link of document.querySelectorAll<HTMLLinkElement>(
       'head link[rel="icon"], head link[rel="apple-touch-icon"], head link[rel="manifest"]',

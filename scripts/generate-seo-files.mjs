@@ -1,15 +1,13 @@
-import { readdir, readFile, writeFile } from 'node:fs/promises'
+import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { createAgentDocuments, normalizeSiteUrl, readSoftwareDocuments, writeAgentDocuments } from '../build/agentDocuments.mjs'
+import { siteConfig, technologyGroups } from '../src/data/site.ts'
 
 const projectRoot = process.cwd()
 const publicDir = join(projectRoot, 'public')
 const contentDir = join(projectRoot, 'src', 'content', 'software')
 const fallbackSiteUrl = 'https://xlucifer.top/'
-const siteUrl = ensureTrailingSlash(process.env.VITE_SITE_URL || fallbackSiteUrl)
-
-function ensureTrailingSlash(value) {
-  return value.endsWith('/') ? value : `${value}/`
-}
+const siteUrl = normalizeSiteUrl(process.env.VITE_SITE_URL || fallbackSiteUrl)
 
 function absoluteUrl(path = '/') {
   return new URL(path.replace(/^\/+/, ''), siteUrl).href
@@ -29,27 +27,12 @@ function escapeXml(value) {
     .replaceAll("'", '&apos;')
 }
 
-function parseSlug(source, filename) {
-  const frontmatter = source.match(/^---\r?\n([\s\S]*?)\r?\n---/)
-  const slug = frontmatter?.[1].match(/^slug:\s*(.+)$/m)?.[1].trim()
-
-  return slug || filename.replace(/\.md$/, '')
-}
-
-const contentFiles = (await readdir(contentDir))
-  .filter((filename) => filename.endsWith('.md'))
-  .sort()
-
-const softwarePages = await Promise.all(
-  contentFiles.map(async (filename) => {
-    const source = await readFile(join(contentDir, filename), 'utf8')
-    return {
-      slug: parseSlug(source, filename),
-      images: [...source.matchAll(/!\[[^\]]*\]\(\.\.\/\.\.\/(previews\/[\w/-]+\.png)\)/g)]
-        .map(match => absoluteUrl(match[1])),
-    }
-  }),
-)
+const documents = await readSoftwareDocuments(contentDir)
+const softwarePages = documents.map(({ project, body }) => ({
+  slug: project.slug,
+  images: [...body.matchAll(/!\[[^\]]*\]\(\.\.\/\.\.\/(previews\/[\w/-]+\.png)\)/g)]
+    .map(match => absoluteUrl(match[1])),
+}))
 
 const paths = [
   '/',
@@ -127,6 +110,8 @@ const notFoundHtml = `<!doctype html>
 </html>
 `
 
+const agentDocuments = createAgentDocuments({ documents, siteConfig, technologyGroups, siteUrl })
+await writeAgentDocuments(publicDir, agentDocuments)
 await Promise.all([
   writeFile(join(publicDir, 'sitemap.xml'), sitemapXml),
   writeFile(join(publicDir, 'sitemap.txt'), sitemapText),
@@ -134,4 +119,4 @@ await Promise.all([
   writeFile(join(publicDir, '404.html'), notFoundHtml),
 ])
 
-console.log(`Generated SEO files for ${urls.length} URLs at ${siteUrl}`)
+console.log(`Generated SEO files for ${urls.length} URLs and ${agentDocuments.size - 1} Markdown pages at ${siteUrl}`)

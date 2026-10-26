@@ -2,52 +2,12 @@ import { createHash } from 'node:crypto'
 import { readFile, stat } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import MarkdownIt from 'markdown-it'
-import type Token from 'markdown-it/lib/token.mjs'
 import type { Plugin } from 'vite'
-import type { SoftwareDetailMetadata, SoftwareProject } from '../src/types/software.ts'
+import type { SoftwareDetailMetadata } from '../src/types/software.ts'
+import { parseSoftwareDocument } from './softwareDocument.ts'
+export { parseSoftwareDocument } from './softwareDocument.ts'
 
-function parseList(value = ''): string[] {
-  return value.replace(/^\[|\]$/g, '').split(',')
-    .map(item => item.trim().replace(/^['"]|['"]$/g, '')).filter(Boolean)
-}
-
-export function parseSoftwareDocument(path: string, source: string) {
-  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/)
-  if (!match) throw new Error(`软件文档缺少 frontmatter: ${path}`)
-  const metadata = Object.fromEntries(match[1]!.split(/\r?\n/).flatMap(line => {
-    const separator = line.indexOf(':')
-    return separator < 0 ? [] : [[line.slice(0, separator).trim(), line.slice(separator + 1).trim()]]
-  }))
-  const slug = metadata.slug || path.split(/[\\/]/).at(-1)?.replace(/\.md$/, '') || ''
-  const project: SoftwareProject = {
-    slug,
-    title: metadata.title || slug,
-    summary: metadata.summary || '',
-    category: metadata.category || 'Tool',
-    year: metadata.year || new Date().getFullYear().toString(),
-    order: Number(metadata.order || 999),
-    status: metadata.status || 'Active',
-    accent: metadata.accent || '#79d9c1',
-    stack: parseList(metadata.stack),
-    featured: metadata.featured === 'true',
-    repo: metadata.repo || undefined,
-    demo: metadata.demo || undefined,
-    demoLabel: metadata.demoLabel || undefined,
-  }
-  const detail: SoftwareDetailMetadata = {
-    slug,
-    title: metadata.seoTitle || `${project.title} — ${project.category} | X.LUCIFER`,
-    description: metadata.seoDescription || project.summary,
-    keywords: parseList(metadata.keywords || `[${project.title}, ${project.category}]`),
-    programmingLanguages: parseList(metadata.languages),
-    operatingSystems: parseList(metadata.platforms),
-    applicationCategory: metadata.appCategory || 'DeveloperApplication',
-    features: parseList(metadata.features),
-    headings: [],
-    screenshots: [],
-  }
-  return { project, detail, body: match[2]!.trim() }
-}
+type Token = ReturnType<InstanceType<typeof MarkdownIt>['parse']>[number]
 
 function addHeadings(tokens: Token[], detail: SoftwareDetailMetadata) {
   const used = new Set<string>()
@@ -105,7 +65,7 @@ export function softwareMarkdown(): Plugin {
       for (const token of images) {
         token.attrSet('loading', 'lazy')
         token.attrSet('decoding', 'async')
-        const src = token.attrGet('src') || ''
+        const src = String(token.attrGet('src') || '')
         // Project previews live at a known, deployment-independent relative path.
         if (!/^\.\.\/\.\.\/previews\/[\w/-]+\.png$/.test(src)) continue
         const path = src.slice('../../'.length)

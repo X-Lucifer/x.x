@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "files": {
+    "llms.txt": "029bee657f352d1da801b2a39e57daee09493b1f30a3dccf9adabba9c5cc683b",
+    "index.md": "c006d4dee0d7fe4e774c7d04ab75f5b1777bcf5c3a5165d8ae8118f34fe483c0",
+    "about/index.md": "8fa611b2be3df9ead13fc08583a09d12165fb4e93f10a5f45a50392e3081c9ab",
+    "software/index.md": "224e7ae40d3fa4726959dd9d25b9df332b73283ca010e7a656e4f32e210630e7",
+    "software/x-xray/index.md": "9c07729d94bc9072e9907e8ac0a003eaa305f37a51ee1b24f13104a92126c587",
+    "software/x-superresolution/index.md": "72ae64868a82935e4f4cdff804d418a86834dcc240965468e229427b5ee3c510",
+    "software/tauri-obsidian-lite/index.md": "7f21f2428de771645ce6776fc34726c01f9b90246abf9080391f32fef706cc20",
+    "software/wails-obsidian-lite/index.md": "58bf34c46b03ce59b507a9f11b3b929873538f9c087cf761d57720fd086c44ff",
+    "software/rust-xserver/index.md": "0097f3b3a27f185f45af76ae0034523b443215e0c0f586e3a8ee89a5893e9622",
+    "software/go-xserver/index.md": "d2b67eba1f989e1e3fed6e4988f2cadbd4f53bb2776c7af68760976062a8b75b",
+    "software/x-webdav-server/index.md": "3f4b2b974b1de243ec6cdd3c068453a67cf3513cf1392b3d91f179bc744694ec"
+  }
+}
